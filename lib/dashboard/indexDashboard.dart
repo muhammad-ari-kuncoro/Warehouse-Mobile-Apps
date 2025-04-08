@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:mobile_apps_wh/main.dart';
 import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
 import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
+import 'package:mobile_apps_wh/services/theme_services.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -60,23 +61,22 @@ class DashboardScreen extends StatelessWidget {
                             ),
                             Row(
                               children: [
-                                Text(
+                                Icon(
                                   themeNotifier.value == ThemeMode.dark
-                                      ? 'on'
-                                      : 'off',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      color: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium!
-                                          .color),
+                                      ? Icons.nightlight_round
+                                      : Icons.wb_sunny,
+                                  size: 20,
+                                  color: Theme.of(context).iconTheme.color,
                                 ),
                                 const SizedBox(width: 4),
                                 Switch(
                                   value: themeNotifier.value == ThemeMode.dark,
-                                  onChanged: (val) {
-                                    themeNotifier.value =
+                                  onChanged: (val) async {
+                                    final mode =
                                         val ? ThemeMode.dark : ThemeMode.light;
+                                    themeNotifier.value = mode;
+                                    await ThemeService.saveTheme(
+                                        val); // Simpan preferensi tema
                                   },
                                 ),
                               ],
@@ -84,44 +84,62 @@ class DashboardScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 24),
+                        Align(
+                          alignment: Alignment.topLeft,
+                          child: Wrap(
+                            spacing: 16,
+                            runSpacing: 16,
+                            children: [
+                              _DashboardCard(
+                                icon: Icons.home,
+                                label: 'Home',
+                                onPressed: () {},
+                                width: isLargeScreen
+                                    ? 200
+                                    : constraints.maxWidth * 0.45,
+                              ),
+                              _DashboardCard(
+                                icon: Icons.book,
+                                label: 'User Profile',
+                                onPressed: () {
+                                  navigateWithSlide(
+                                    context,
+                                    const DummyPage(title: 'Data'),
+                                  );
+                                },
+                                width: isLargeScreen
+                                    ? 200
+                                    : constraints.maxWidth * 0.45,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
                         Wrap(
                           spacing: 16,
                           runSpacing: 16,
                           children: [
-                            _DashboardCard(
-                              icon: Icons.home,
-                              label: 'Home',
-                              onPressed: () {},
+                            SizedBox(
                               width: isLargeScreen
-                                  ? constraints.maxWidth * 0.2
-                                  : constraints.maxWidth * 0.4,
+                                  ? constraints.maxWidth * 0.45
+                                  : double.infinity,
+                              child: _StatBox(
+                                title: 'Statistik Pengiriman Produk',
+                                value: 10,
+                                icon: Icons.car_crash,
+                              ),
                             ),
-                            _DashboardCard(
-                              icon: Icons.book,
-                              label: 'User Profile',
-                              onPressed: () {
-                                navigateWithSlide(
-                                  context,
-                                  const DummyPage(title: 'Data'),
-                                );
-                              },
+                            SizedBox(
                               width: isLargeScreen
-                                  ? constraints.maxWidth * 0.2
-                                  : constraints.maxWidth * 0.4,
+                                  ? constraints.maxWidth * 0.45
+                                  : double.infinity,
+                              child: _StatBox(
+                                title: 'Statistik Barang Masuk',
+                                value: 10,
+                                icon: Icons.call_received_outlined,
+                              ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 24),
-                        _StatBox(
-                          title: 'Statistik Pengiriman Produk',
-                          value: 10,
-                          icon: Icons.car_crash,
-                        ),
-                        const SizedBox(height: 16),
-                        _StatBox(
-                          title: 'Statistik Barang Masuk',
-                          value: 10,
-                          icon: Icons.call_received_outlined,
                         ),
                       ],
                     ),
@@ -145,15 +163,21 @@ class SideBar extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blueGrey),
-            child: Center(
-              child: Text(
-                'Menu Utama',
-                style: TextStyle(color: Colors.grey, fontSize: 20),
+          SizedBox(
+            height: 80,
+            child: DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blueGrey),
+              margin: EdgeInsets.zero,
+              padding: EdgeInsets.zero,
+              child: Center(
+                child: Text(
+                  'Menu Utama',
+                  style: TextStyle(color: Colors.grey, fontSize: 18),
+                ),
               ),
             ),
           ),
+
           ListTile(
             leading: const Icon(Icons.dashboard),
             title: const Text('Dashboard'),
@@ -204,7 +228,7 @@ class SideBar extends StatelessWidget {
               Navigator.pop(context); // Tutup drawer dulu
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => MaterialScreen()),
+                MaterialPageRoute(builder: (context) => const MaterialScreen()),
               );
             },
           ),

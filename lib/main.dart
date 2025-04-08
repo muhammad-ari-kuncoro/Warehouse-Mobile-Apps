@@ -1,16 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
-import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
-import 'homePage.dart';
-import 'dashboard/indexDashboard.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
 
-final themeNotifier =
-    ValueNotifier<ThemeMode>(ThemeMode.light); // default: light
-void main() async {
+final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID', null);
+  await _loadTheme(); // Load theme sebelum runApp
   runApp(const MyApp());
+}
+
+// Fungsi untuk memuat tema dari shared_preferences
+Future<void> _loadTheme() async {
+  final prefs = await SharedPreferences.getInstance();
+  final isDark = prefs.getBool('isDarkMode') ?? false;
+  themeNotifier.value = isDark ? ThemeMode.dark : ThemeMode.light;
+}
+
+// Fungsi untuk menyimpan tema saat diubah
+Future<void> _saveTheme(bool isDarkMode) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('isDarkMode', isDarkMode);
 }
 
 class MyApp extends StatelessWidget {

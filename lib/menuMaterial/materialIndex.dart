@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
+import 'package:mobile_apps_wh/main.dart';
+import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
+import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
+import 'package:mobile_apps_wh/services/theme_services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MaterialScreen extends StatefulWidget {
   const MaterialScreen({super.key});
@@ -14,7 +19,6 @@ class _MaterialScreenState extends State<MaterialScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     final now = DateTime.now();
     final formattedDate = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(now);
     final theme = Theme.of(context);
@@ -24,19 +28,25 @@ class _MaterialScreenState extends State<MaterialScreen> {
       backgroundColor: colorScheme.background,
       drawer: Drawer(
         child: ListView(
-          padding: EdgeInsets.zero,
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
           children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: colorScheme.primary),
-              child: Text(
-                'Menu',
-                style: theme.textTheme.headlineSmall!
-                    .copyWith(color: Colors.white),
+            SizedBox(
+              height: 80,
+              child: DrawerHeader(
+                decoration: BoxDecoration(color: Colors.blueGrey),
+                margin: EdgeInsets.zero,
+                padding: EdgeInsets.zero,
+                child: Center(
+                  child: Text(
+                    'Menu Utama',
+                    style: TextStyle(color: Colors.grey[200], fontSize: 18),
+                  ),
+                ),
               ),
             ),
             ListTile(
-              leading: Icon(Icons.dashboard, color: theme.iconTheme.color),
-              title: Text('Dashboard', style: theme.textTheme.bodyMedium),
+              leading: const Icon(Icons.dashboard),
+              title: const Text('Dashboard'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -46,17 +56,77 @@ class _MaterialScreenState extends State<MaterialScreen> {
                 );
               },
             ),
+            const Divider(),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+              child: Text(
+                '— Industri',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+              ),
+            ),
             ListTile(
-              leading: Icon(Icons.dashboard, color: theme.iconTheme.color),
-              title: Text('Material', style: theme.textTheme.bodyMedium),
+              leading: const Icon(Icons.folder),
+              title: const Text('Proyek'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const MaterialScreen()),
+                      builder: (context) => const ProjectScreen()),
                 );
               },
+            ),
+            const Divider(),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+              child: Text(
+                '— Stok',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.insert_chart),
+              title: const Text('Data Material'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.insert_chart_rounded),
+              title: const Text('Data Consumable'),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.insert_link_rounded),
+              title: const Text('Data Alat'),
+              onTap: () {},
+            ),
+            const Divider(),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+              child: Text(
+                '— Dokumen',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.folder_copy_sharp),
+              title: const Text('Good Received'),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.folder_copy_outlined),
+              title: const Text('Delivery Order'),
+              onTap: () {},
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: () {},
             ),
           ],
         ),
@@ -64,6 +134,26 @@ class _MaterialScreenState extends State<MaterialScreen> {
       appBar: AppBar(
         title: const Text('Material'),
         actions: [
+          Row(
+            children: [
+              Icon(
+                themeNotifier.value == ThemeMode.dark
+                    ? Icons.nightlight_round
+                    : Icons.wb_sunny,
+                size: 20,
+                color: Theme.of(context).iconTheme.color,
+              ),
+              const SizedBox(width: 4),
+              Switch(
+                value: themeNotifier.value == ThemeMode.dark,
+                onChanged: (val) async {
+                  final mode = val ? ThemeMode.dark : ThemeMode.light;
+                  themeNotifier.value = mode;
+                  await ThemeService.saveTheme(val); // Simpan preferensi tema
+                },
+              ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.notifications_none),
             onPressed: () {},
@@ -88,7 +178,16 @@ class _MaterialScreenState extends State<MaterialScreen> {
                       .copyWith(fontWeight: FontWeight.bold),
                 ),
                 ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    // Navigasi ke PageTambah
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const PageTambah(title: 'Tambah Data'),
+                      ),
+                    );
+                  },
                   icon: const Icon(Icons.add),
                   label: const Text('Tambah'),
                   style: ElevatedButton.styleFrom(
@@ -104,26 +203,55 @@ class _MaterialScreenState extends State<MaterialScreen> {
             const SizedBox(height: 16),
             Row(
               children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Tambah logic filter di sini
-                  },
-                  icon: const Icon(Icons.filter_list),
-                  label: const Text('Filter'),
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        hint: const Row(
+                          children: [
+                            Icon(Icons.filter_list, size: 18),
+                            SizedBox(width: 8),
+                            Text('Filter'),
+                          ],
+                        ),
+                        value: selectedOption,
+                        items: ['Semua', 'Aktif', 'Selesai']
+                            .map((option) => DropdownMenuItem(
+                                  value: option,
+                                  child: Text(option),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedOption = value;
+                          });
+                        },
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  flex: 5,
+                  child: SizedBox(
+                    height: 48,
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12),
                       ),
                     ),
                   ),
@@ -173,6 +301,26 @@ class _MaterialScreenState extends State<MaterialScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class PageTambah extends StatelessWidget {
+  final String title;
+
+  const PageTambah({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        backgroundColor: Colors.blueGrey.shade100,
+        foregroundColor: Colors.black87,
+      ),
+      body: Center(
+        child: Text("Halaman $title", style: const TextStyle(fontSize: 24)),
       ),
     );
   }
