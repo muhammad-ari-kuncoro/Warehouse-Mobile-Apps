@@ -33,7 +33,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
             SizedBox(
               height: 80,
               child: DrawerHeader(
-                decoration: BoxDecoration(color: Colors.blueGrey),
+                decoration: const BoxDecoration(color: Colors.blueGrey),
                 margin: EdgeInsets.zero,
                 padding: EdgeInsets.zero,
                 child: Center(
@@ -276,7 +276,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
-                    headingRowColor: MaterialStateColor.resolveWith(
+                    headingRowColor: WidgetStateColor.resolveWith(
                       (states) => colorScheme.primary.withOpacity(0.1),
                     ),
                     columns: const [
@@ -309,19 +309,179 @@ class _MaterialScreenState extends State<MaterialScreen> {
 class PageTambah extends StatelessWidget {
   final String title;
 
-  const PageTambah({required this.title});
+  const PageTambah({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(title),
         backgroundColor: Colors.blueGrey.shade100,
         foregroundColor: Colors.black87,
+        actions: [
+          IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
+          const Padding(
+            padding: EdgeInsets.only(right: 16.0),
+            child: CircleAvatar(
+              radius: 16,
+              child: Icon(Icons.person, size: 18),
+            ),
+          ),
+        ],
       ),
-      body: Center(
-        child: Text("Halaman $title", style: const TextStyle(fontSize: 24)),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            _buildFormCard(
+              children: [
+                _buildTextField(
+                  label: 'Nama Material',
+                  hint: 'Mohon Isi Nama Material',
+                ),
+                _buildTextField(
+                  label: 'Spesifikasi Material',
+                  hint: 'Mohon Isi Spesifikasi Material',
+                ),
+                _buildTextField(
+                  label: 'Quantity Material',
+                  hint: 'Mohon Isi Quantity Material',
+                ),
+                _buildDropdownField(label: 'Jenis Quantity'),
+                _buildDropdownField(label: 'Jenis Material'),
+                _buildTextField(label: 'Harga Material', hint: 'Rp.'),
+                _buildDropdownFieldDropdown(
+                  label: 'Kebutuhan Proyek',
+                  items: [
+                    'Infrastruktur',
+                    'Mekanikal',
+                    'Elektrikal',
+                    'Sipil',
+                    'Lainnya'
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Close"),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: () {
+                    // Simpan data
+                  },
+                  child: const Text("Save"),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildFormCard({required List<Widget> children}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: children
+            .map((child) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: child,
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildDropdownFieldDropdown({
+    required String label,
+    required List<String> items,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          decoration: InputDecoration(
+            hintText: 'Pilih $label',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          ),
+          items: items
+              .map((item) => DropdownMenuItem(
+                    value: item,
+                    child: Text(item),
+                  ))
+              .toList(),
+          onChanged: (value) {
+            // Di sini kamu bisa simpan ke variabel state
+            print('Dipilih: $value');
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField({required String label, required String hint}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+        const SizedBox(height: 6),
+        TextFormField(
+          decoration: InputDecoration(
+            hintText: hint,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownField({required String label}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          decoration: InputDecoration(
+            hintText: 'Pilih $label',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          ),
+          items: const [], // Tambahkan item dropdown di sini
+          onChanged: (value) {},
+        ),
+      ],
     );
   }
 }
