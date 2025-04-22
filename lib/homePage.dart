@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -6,7 +9,64 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _roleController = TextEditingController();
   bool _obscureText = true;
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final role = _roleController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Email dan password wajib diisi")),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'http://kuncoro-api-warehouse.site/api/login'), // Ganti dengan URL API kamu
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        final role = data['user']['role'];
+
+        if (role == 'warehouse_staff') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => DashboardScreen()),
+          );
+        } else if (role == 'user') {
+          Navigator.pushReplacementNamed(context, '/user-dashboard');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Role tidak dikenali')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Login gagal')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Terjadi kesalahan: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
-                      'assets/images/Logo-Company.png', // Ganti dengan path logo Armindo
+                      'assets/images/Logo-Company.png',
                       height: 100,
                     ),
                     const SizedBox(height: 20),
@@ -60,6 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               const Text("EMAIL"),
                               TextField(
+                                controller: _emailController,
                                 decoration: InputDecoration(
                                   hintText: "Enter your email or username",
                                   border: InputBorder.none,
@@ -74,6 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               const Text("PASSWORD"),
                               TextField(
+                                controller: _passwordController,
                                 obscureText: _obscureText,
                                 decoration: InputDecoration(
                                   hintText: "Enter your password",
@@ -110,8 +172,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        onPressed: () {},
-                        child: Text("Sign In", style: TextStyle(fontSize: 16)),
+                        onPressed: _isLoading ? null : _login,
+                        child: _isLoading
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text("Sign In", style: TextStyle(fontSize: 16)),
                       ),
                     ),
                   ],

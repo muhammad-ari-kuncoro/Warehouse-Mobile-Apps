@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_apps_wh/homePage.dart';
 import 'package:mobile_apps_wh/main.dart';
 import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
 import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
 import 'package:mobile_apps_wh/services/theme_services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -277,12 +280,26 @@ class SideBar extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
-            onTap: () {},
+            onTap: () {
+              // Panggil fungsi logout disini
+              _logout(context);
+            },
           ),
         ],
       ),
     );
   }
+}
+
+Future<void> _logout(BuildContext context) async {
+  // Logout logic disini
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('Logged out!')),
+  );
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => LoginScreen()),
+  );
 }
 
 class _DashboardCard extends StatelessWidget {
@@ -407,6 +424,54 @@ class _StatBox extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class LogoutTile extends StatelessWidget {
+  const LogoutTile({Key? key}) : super(key: key);
+
+  Future<void> _logout(BuildContext context) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
+      final response = await http.post(
+        Uri.parse('http://kuncoro-api-warehouse.site/api/logout'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Hapus token lokal
+        await prefs.clear();
+
+        // Kembali ke login
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Logout gagal')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Terjadi kesalahan: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.logout),
+      title: const Text('Logout'),
+      onTap: () => _logout(context),
     );
   }
 }

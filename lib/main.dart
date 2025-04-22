@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_apps_wh/homePage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
@@ -66,7 +67,7 @@ class MyApp extends StatelessWidget {
               bodyMedium: TextStyle(color: Colors.white),
             ),
           ),
-          home: const DashboardScreen(),
+          home: LoginScreen(),
         );
       },
     );
