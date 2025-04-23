@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_apps_wh/Services/theme_services.dart';
@@ -5,6 +7,7 @@ import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
 import 'package:mobile_apps_wh/main.dart';
 import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
 import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
+import 'package:http/http.dart' as http;
 
 class ProjectScreen extends StatefulWidget {
   const ProjectScreen({super.key});
@@ -14,7 +17,40 @@ class ProjectScreen extends StatefulWidget {
 }
 
 class _ProjectScreenState extends State<ProjectScreen> {
+  List<dynamic> projectList = [];
+  bool isLoading = true;
   String? selectedOption;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProjects();
+  }
+
+  Future<void> fetchProjects() async {
+    try {
+      final response = await http.get(Uri.parse(
+          'https://kuncoro-api-warehouse.site/api/proyek/getdata-proyek'));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> decoded = jsonDecode(response.body);
+        final List<dynamic> data =
+            decoded['data']; // Ambil array dari key `data`
+
+        setState(() {
+          projectList = data;
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load projects');
+      }
+    } catch (e) {
+      print('Error fetching projects: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +139,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
               onTap: () {},
             ),
             ListTile(
-              leading: const Icon(Icons.insert_link_rounded),
+              leading: const Icon(Icons.build),
               title: const Text('Data Alat'),
               onTap: () {},
             ),
@@ -183,7 +219,6 @@ class _ProjectScreenState extends State<ProjectScreen> {
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
-                    // Navigasi ke PageTambah
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -205,47 +240,48 @@ class _ProjectScreenState extends State<ProjectScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        hint: Row(
-                          children: const [
-                            Icon(Icons.filter_list, size: 18),
-                            SizedBox(width: 8),
-                            Text('Filter'),
-                          ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 180,
+                    child: Container(
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          hint: Row(
+                            children: const [
+                              Icon(Icons.filter_list, size: 18),
+                              SizedBox(width: 8),
+                              Text('Filter'),
+                            ],
+                          ),
+                          value: selectedOption,
+                          items: ['general', 'migas', 'Panas Bumi']
+                              .map((option) => DropdownMenuItem(
+                                    value: option,
+                                    child: Text(option),
+                                  ))
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              selectedOption = value;
+                            });
+                          },
                         ),
-                        value: selectedOption,
-                        items: ['Semua', 'Aktif', 'Selesai']
-                            .map((option) => DropdownMenuItem(
-                                  value: option,
-                                  child: Text(option),
-                                ))
-                            .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedOption = value;
-                          });
-                        },
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 5,
-                  child: SizedBox(
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    width: 200,
                     height: 48,
                     child: TextField(
                       decoration: InputDecoration(
@@ -259,8 +295,8 @@ class _ProjectScreenState extends State<ProjectScreen> {
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 24),
             Expanded(
@@ -281,24 +317,25 @@ class _ProjectScreenState extends State<ProjectScreen> {
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     headingRowColor: MaterialStateColor.resolveWith(
-                      (states) => colorScheme.primary.withOpacity(0.1),
-                    ),
+                        (states) => colorScheme.primary.withOpacity(0.1)),
                     columns: const [
                       DataColumn(label: Text('Nama Proyek')),
                       DataColumn(label: Text('Nama Client')),
-                      DataColumn(label: Text('No JO (Job Order)')),
+                      DataColumn(label: Text('Kategori')),
+                      DataColumn(label: Text('No JO ( Job Order)')),
+                      DataColumn(label: Text('Kode Proyek')),
                       DataColumn(label: Text('No PO (Purchase Order)')),
-                      DataColumn(label: Text('Jenis Proyek')),
                     ],
-                    rows: const [
-                      DataRow(cells: [
-                        DataCell(Text('Strainer Skid Bar Pipe Spo')),
-                        DataCell(Text('Pipe 1"')),
-                        DataCell(Text('PT C')),
-                        DataCell(Text('PT C')),
-                        DataCell(Icon(Icons.arrow_forward_ios, size: 16)),
-                      ]),
-                    ],
+                    rows: projectList.map((project) {
+                      return DataRow(cells: [
+                        DataCell(Text(project['nama_project'] ?? '-')),
+                        DataCell(Text(project['sub_nama_project'] ?? '-')),
+                        DataCell(Text(project['kategori_project'] ?? '-')),
+                        DataCell(Text(project['no_jo_project'] ?? '-')),
+                        DataCell(Text(project['kode_project'] ?? '-')),
+                        DataCell(Text(project['no_po_project'] ?? '-')),
+                      ]);
+                    }).toList(),
                   ),
                 ),
               ),
@@ -317,6 +354,43 @@ class PageTambah extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController _namaProyekController = TextEditingController();
+    final TextEditingController _subNamaProyekController =
+        TextEditingController();
+    final TextEditingController _noJOProyekController = TextEditingController();
+    final TextEditingController _noPOController = TextEditingController();
+    final TextEditingController _kategoriProyekController =
+        TextEditingController();
+
+    Future<void> _submitForm() async {
+      final uri = Uri.parse(
+          'https://kuncoro-api-warehouse.site/api/proyek/create-project');
+
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'nama_project': _namaProyekController.text,
+          'sub_nama_project': _subNamaProyekController.text,
+          'kategori_project': _kategoriProyekController.text,
+          'no_jo_project': _noJOProyekController.text,
+          'no_po_project': _noPOController.text,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Data berhasil disimpan')),
+        );
+        Navigator.pop(context);
+      } else {
+        print('Gagal simpan: ${response.body}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal menyimpan data')),
+        );
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -344,24 +418,29 @@ class PageTambah extends StatelessWidget {
             _buildFormCard(
               children: [
                 _buildTextField(
-                  label: 'Nama Proyek ',
-                  hint: 'Mohon Isi Nama Material',
+                  label: 'Nama Proyek',
+                  hint: 'Mohon Isi Nama Proyek',
+                  controller: _namaProyekController,
                 ),
                 _buildTextField(
-                  label: 'Sub nama Proyek ',
+                  label: 'Nama Client Proyek',
                   hint: 'Mohon Isi Spesifikasi Material',
+                  controller: _subNamaProyekController,
                 ),
                 _buildTextField(
-                  label: 'No Job Order (JO)',
-                  hint: 'Mohon Isi Job Order Proyek',
-                ),
-                _buildTextField(
-                  label: 'No Purchase Order (PO)',
-                  hint: 'Mohon Isi Purchase Order Proyek',
+                  label: 'No JO',
+                  hint: 'Mohon Isi Quantity Material',
+                  controller: _noJOProyekController,
                 ),
                 _buildDropdownFieldDropdown(
-                  label: 'Nama Kategori Proyek',
-                  items: ['', 'Mekanikal', 'Elektrikal', 'Sipil', 'Lainnya'],
+                  label: 'Kategori Proyek',
+                  items: ['Infrastruktur', 'Mekanikal', 'Elektrikal'],
+                  controller: _kategoriProyekController,
+                ),
+                _buildTextField(
+                  label: 'No PO',
+                  hint: 'Mohon Isi Quantity Material',
+                  controller: _noPOController,
                 ),
               ],
             ),
@@ -375,9 +454,7 @@ class PageTambah extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
-                  onPressed: () {
-                    // Simpan data
-                  },
+                  onPressed: _submitForm,
                   child: const Text("Save"),
                 ),
               ],
@@ -406,9 +483,36 @@ class PageTambah extends StatelessWidget {
     );
   }
 
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildDropdownFieldDropdown({
     required String label,
     required List<String> items,
+    required TextEditingController controller,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,53 +536,8 @@ class PageTambah extends StatelessWidget {
                   ))
               .toList(),
           onChanged: (value) {
-            // Di sini kamu bisa simpan ke variabel state
-            print('Dipilih: $value');
+            if (value != null) controller.text = value;
           },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField({required String label, required String hint}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-        const SizedBox(height: 6),
-        TextFormField(
-          decoration: InputDecoration(
-            hintText: hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDropdownField({required String label}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          decoration: InputDecoration(
-            hintText: 'Pilih $label',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          ),
-          items: const [], // Tambahkan item dropdown di sini
-          onChanged: (value) {},
         ),
       ],
     );

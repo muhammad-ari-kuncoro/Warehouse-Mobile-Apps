@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
+import 'package:mobile_apps_wh/dashboard/produksiDashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -47,17 +48,16 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
             MaterialPageRoute(builder: (context) => DashboardScreen()),
           );
-        } else if (role == 'user') {
-          Navigator.pushReplacementNamed(context, '/user-dashboard');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Role tidak dikenali')),
+        } else if (role == 'produksi') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => ProduksiDashbord()),
           );
+        } else {
+          showAlert("Role Error", "Role tidak dikenali");
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Login gagal')),
-        );
+        showAlert("Login Gagal", data['message'] ?? 'Login gagal');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -66,6 +66,22 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void showAlert(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
