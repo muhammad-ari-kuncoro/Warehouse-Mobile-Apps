@@ -434,7 +434,7 @@ class PageTambah extends StatelessWidget {
                 ),
                 _buildDropdownFieldDropdown(
                   label: 'Kategori Proyek',
-                  items: ['Infrastruktur', 'Mekanikal', 'Elektrikal'],
+                  items: ['General Industri', 'Oil dan Migas', 'Panas Bumi'],
                   controller: _kategoriProyekController,
                 ),
                 _buildTextField(

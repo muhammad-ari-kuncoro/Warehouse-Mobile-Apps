@@ -1,11 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_apps_wh/Services/theme_services.dart';
 import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
 import 'package:mobile_apps_wh/main.dart';
-import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
 import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
-import 'package:mobile_apps_wh/services/theme_services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
+import 'package:http/http.dart' as http;
 
 class MaterialScreen extends StatefulWidget {
   const MaterialScreen({super.key});
@@ -15,7 +17,61 @@ class MaterialScreen extends StatefulWidget {
 }
 
 class _MaterialScreenState extends State<MaterialScreen> {
+  List<dynamic> materialList = [];
+  List<dynamic> _projectList = [];
+  bool isLoading = true;
   String? selectedOption;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchMaterial();
+    fetchProject();
+  }
+
+  Future<void> fetchMaterial() async {
+    try {
+      final response = await http.get(Uri.parse(
+          'https://kuncoro-api-warehouse.site/api/material/getdata-material'));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> decoded = jsonDecode(response.body);
+        final List<dynamic> data = decoded['data'];
+
+        setState(() {
+          materialList = data;
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load materials');
+      }
+    } catch (e) {
+      print('Error fetching materials: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> fetchProject() async {
+    try {
+      final response = await http.get(Uri.parse(
+          'https://kuncoro-api-warehouse.site/api/proyek/getdata-proyek'));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> decoded = jsonDecode(response.body);
+        final List<dynamic> data = decoded['data'];
+
+        setState(() {
+          _projectList = data;
+        });
+      } else {
+        throw Exception('Failed to load projects');
+      }
+    } catch (e) {
+      print('Error fetching projects: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +114,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
             ),
             const Divider(),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
               child: Text(
                 '— Industri',
                 style:
@@ -67,7 +123,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.folder),
-              title: const Text('Proyek'),
+              title: const Text('Data Proyek'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -79,7 +135,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
             ),
             const Divider(),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
               child: Text(
                 '— Stok',
                 style:
@@ -91,6 +147,11 @@ class _MaterialScreenState extends State<MaterialScreen> {
               title: const Text('Data Material'),
               onTap: () {
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MaterialScreen()),
+                );
               },
             ),
             ListTile(
@@ -99,13 +160,13 @@ class _MaterialScreenState extends State<MaterialScreen> {
               onTap: () {},
             ),
             ListTile(
-              leading: const Icon(Icons.insert_link_rounded),
+              leading: const Icon(Icons.build),
               title: const Text('Data Alat'),
               onTap: () {},
             ),
             const Divider(),
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
               child: Text(
                 '— Dokumen',
                 style:
@@ -132,7 +193,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
         ),
       ),
       appBar: AppBar(
-        title: const Text('Material'),
+        title: const Text('Data Material'),
         actions: [
           Row(
             children: [
@@ -149,7 +210,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
                 onChanged: (val) async {
                   final mode = val ? ThemeMode.dark : ThemeMode.light;
                   themeNotifier.value = mode;
-                  await ThemeService.saveTheme(val); // Simpan preferensi tema
+                  await ThemeService.saveTheme(val);
                 },
               ),
             ],
@@ -164,324 +225,286 @@ class _MaterialScreenState extends State<MaterialScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Menu Material',
-                  style: theme.textTheme.titleLarge!
-                      .copyWith(fontWeight: FontWeight.bold),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Navigasi ke PageTambah
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const PageTambah(title: 'Tambah Data'),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Menu Material',
+                        style: theme.textTheme.titleLarge!
+                            .copyWith(fontWeight: FontWeight.bold),
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Tambah'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        hint: const Row(
-                          children: [
-                            Icon(Icons.filter_list, size: 18),
-                            SizedBox(width: 8),
-                            Text('Filter'),
-                          ],
-                        ),
-                        value: selectedOption,
-                        items: ['Semua', 'Aktif', 'Selesai']
-                            .map((option) => DropdownMenuItem(
-                                  value: option,
-                                  child: Text(option),
-                                ))
-                            .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedOption = value;
-                          });
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PageTambah(
+                                title: 'Tambah Data',
+                                projectList: _projectList,
+                              ),
+                            ),
+                          );
                         },
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 5,
-                  child: SizedBox(
-                    height: 48,
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Tambah'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 180,
+                          child: Container(
+                            height: 48,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                hint: Row(
+                                  children: const [
+                                    Icon(Icons.filter_list, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('Filter'),
+                                  ],
+                                ),
+                                value: selectedOption,
+                                items: ['general', 'migas', 'Panas Bumi']
+                                    .map((option) => DropdownMenuItem(
+                                          value: option,
+                                          child: Text(option),
+                                        ))
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedOption = value;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        SizedBox(
+                          width: 200,
+                          height: 48,
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Search',
+                              prefixIcon: const Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          columns: const [
+                            DataColumn(label: Text('Kode Material')),
+                            DataColumn(label: Text('Nama Material')),
+                            DataColumn(label: Text('Spesifikasi')),
+                            DataColumn(label: Text('Quantity')),
+                            DataColumn(label: Text('Jenis Quantity')),
+                            DataColumn(label: Text('Harga')),
+                            DataColumn(label: Text('Nama Proyek')),
+                          ],
+                          rows: materialList.map((item) {
+                            return DataRow(cells: [
+                              DataCell(Text('${item['kode_material'] ?? '-'}')),
+                              DataCell(Text('${item['nama_material'] ?? '-'}')),
+                              DataCell(Text(
+                                  '${item['spesifikasi_material'] ?? '-'}')),
+                              DataCell(Text('${item['quantity'] ?? '-'}')),
+                              DataCell(
+                                  Text('${item['jenis_quantity'] ?? '-'}')),
+                              DataCell(
+                                  Text('${item['harga_material'] ?? '-'}')),
+                              DataCell(
+                                Text(
+                                  item['project'] != null
+                                      ? '${item['project']['nama_project'] ?? '-'} | ${item['project']['sub_nama_project'] ?? '-'}'
+                                      : '-',
+                                ),
+                              ),
+                            ]);
+                          }).toList(),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    headingRowColor: WidgetStateColor.resolveWith(
-                      (states) => colorScheme.primary.withOpacity(0.1),
-                    ),
-                    columns: const [
-                      DataColumn(label: Text('Nama Material')),
-                      DataColumn(label: Text('Spesifikasi Material')),
-                      DataColumn(label: Text('Quantity')),
-                      DataColumn(label: Text('Jenis Quantity')),
-                      DataColumn(label: Text('Keterangan Proyek')),
-                    ],
-                    rows: const [
-                      DataRow(cells: [
-                        DataCell(Text('Strainer Skid Bar Pipe Spo')),
-                        DataCell(Text('Pipe 1"')),
-                        DataCell(Text('PT C')),
-                        DataCell(Text('PT C')),
-                        DataCell(Icon(Icons.arrow_forward_ios, size: 16)),
-                      ]),
-                    ],
-                  ),
-                ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }
 
-class PageTambah extends StatelessWidget {
+class PageTambah extends StatefulWidget {
   final String title;
+  final List<dynamic> projectList;
+  const PageTambah({super.key, required this.projectList, required this.title});
 
-  const PageTambah({super.key, required this.title});
+  @override
+  State<PageTambah> createState() => _PageTambahState();
+}
+
+class _PageTambahState extends State<PageTambah> {
+  final TextEditingController _namaMaterialController = TextEditingController();
+  final TextEditingController _spesifikasiMaterialController =
+      TextEditingController();
+  final TextEditingController _quantityController = TextEditingController();
+  final TextEditingController _jenisQuantityController =
+      TextEditingController();
+  final TextEditingController _hargaMaterialController =
+      TextEditingController();
+
+  final TextEditingController _jenisMaterialController =
+      TextEditingController();
+
+  int? _selectedProjectId;
+
+  Future<void> _submitForm() async {
+    if (_namaMaterialController.text.isEmpty ||
+        _quantityController.text.isEmpty ||
+        _jenisQuantityController.text.isEmpty ||
+        _hargaMaterialController.text.isEmpty ||
+        _jenisMaterialController.text.isEmpty ||
+        _selectedProjectId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lengkapi semua data terlebih dahulu')),
+      );
+      return;
+    }
+
+    final uri = Uri.parse(
+        'https://kuncoro-api-warehouse.site/api/material/create-material');
+
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nama_material': _namaMaterialController.text,
+        'spesifikasi_material': _spesifikasiMaterialController.text,
+        'quantity': int.tryParse(_quantityController.text) ?? 0,
+        'jenis_quantity': _jenisQuantityController.text,
+        'jenis_material': _jenisQuantityController.text,
+        'harga_material': _hargaMaterialController.text,
+        'project_id': _selectedProjectId,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data berhasil disimpan')),
+      );
+      Navigator.pop(context);
+    } else {
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal menyimpan data')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(title),
-        backgroundColor: Colors.blueGrey.shade100,
-        foregroundColor: Colors.black87,
-        actions: [
-          IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
-          const Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              radius: 16,
-              child: Icon(Icons.person, size: 18),
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
+      appBar: AppBar(title: Text(widget.title)),
+      body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
+        child: ListView(
           children: [
-            _buildFormCard(
-              children: [
-                _buildTextField(
-                  label: 'Nama Material',
-                  hint: 'Mohon Isi Nama Material',
-                ),
-                _buildTextField(
-                  label: 'Spesifikasi Material',
-                  hint: 'Mohon Isi Spesifikasi Material',
-                ),
-                _buildTextField(
-                  label: 'Quantity Material',
-                  hint: 'Mohon Isi Quantity Material',
-                ),
-                _buildDropdownField(label: 'Jenis Quantity'),
-                _buildDropdownField(label: 'Jenis Material'),
-                _buildTextField(label: 'Harga Material', hint: 'Rp.'),
-                _buildDropdownFieldDropdown(
-                  label: 'Kebutuhan Proyek',
-                  items: [
-                    'Infrastruktur',
-                    'Mekanikal',
-                    'Elektrikal',
-                    'Sipil',
-                    'Lainnya'
-                  ],
-                ),
-              ],
+            TextFormField(
+              controller: _namaMaterialController,
+              decoration: const InputDecoration(labelText: 'Nama Material'),
             ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Close"),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: () {
-                    // Simpan data
-                  },
-                  child: const Text("Save"),
-                ),
-              ],
+            TextFormField(
+              controller: _spesifikasiMaterialController,
+              decoration: const InputDecoration(labelText: 'Spesifikasi'),
+            ),
+            TextFormField(
+              controller: _quantityController,
+              decoration: const InputDecoration(labelText: 'Quantity'),
+              keyboardType: TextInputType.number,
+            ),
+            TextFormField(
+              controller: _jenisMaterialController,
+              decoration: const InputDecoration(labelText: 'Jenis Material'),
+            ),
+            TextFormField(
+              controller: _jenisQuantityController,
+              decoration: const InputDecoration(labelText: 'Jenis Quantity'),
+            ),
+            TextFormField(
+              controller: _hargaMaterialController,
+              decoration: const InputDecoration(labelText: 'Harga'),
+            ),
+            DropdownButtonFormField<int>(
+              value: _selectedProjectId,
+              hint: const Text('Pilih Proyek'),
+              items: widget.projectList.map<DropdownMenuItem<int>>((project) {
+                return DropdownMenuItem<int>(
+                  value: project['id'],
+                  child: Text('${project['nama_project']}'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedProjectId = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _submitForm,
+              child: const Text('Simpan'),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildFormCard({required List<Widget> children}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: children
-            .map((child) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: child,
-                ))
-            .toList(),
-      ),
-    );
-  }
-
-  Widget _buildDropdownFieldDropdown({
-    required String label,
-    required List<String> items,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          decoration: InputDecoration(
-            hintText: 'Pilih $label',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          ),
-          items: items
-              .map((item) => DropdownMenuItem(
-                    value: item,
-                    child: Text(item),
-                  ))
-              .toList(),
-          onChanged: (value) {
-            // Di sini kamu bisa simpan ke variabel state
-            print('Dipilih: $value');
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField({required String label, required String hint}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-        const SizedBox(height: 6),
-        TextFormField(
-          decoration: InputDecoration(
-            hintText: hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDropdownField({required String label}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          decoration: InputDecoration(
-            hintText: 'Pilih $label',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          ),
-          items: const [], // Tambahkan item dropdown di sini
-          onChanged: (value) {},
-        ),
-      ],
     );
   }
 }
