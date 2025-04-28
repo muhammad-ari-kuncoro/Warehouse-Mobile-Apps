@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_apps_wh/homePage.dart';
 import 'package:mobile_apps_wh/main.dart';
+import 'package:mobile_apps_wh/menuGoodReceived/indexGoodReceived.dart';
 import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
 import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
+import 'package:mobile_apps_wh/menuTools/indexTools.dart';
 import 'package:mobile_apps_wh/services/theme_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -237,19 +239,25 @@ class SideBar extends StatelessWidget {
           ),
 
           ListTile(
+            leading: const Icon(Icons.insert_chart),
+            title: const Text('Data Alat'),
+            onTap: () {
+              Navigator.pop(context); // Tutup drawer dulu
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ToolsScreen()),
+              );
+            },
+          ),
+
+          ListTile(
             leading: const Icon(Icons.insert_chart_rounded),
             title: const Text('Data Consumable'),
             onTap: () {
               navigateWithSlide(context, const DummyPage(title: 'Laporan'));
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.insert_link_rounded),
-            title: const Text('Data Alat'),
-            onTap: () {
-              navigateWithSlide(context, const DummyPage(title: 'Laporan'));
-            },
-          ),
+
           const Divider(),
           // Heading
           const Padding(
@@ -266,7 +274,11 @@ class SideBar extends StatelessWidget {
             leading: const Icon(Icons.folder_copy_sharp),
             title: const Text('Good Received'),
             onTap: () {
-              navigateWithSlide(context, const DummyPage(title: 'Laporan'));
+              Navigator.pop(context); // Tutup drawer dulu
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const GoodReceived()),
+              );
             },
           ),
           ListTile(

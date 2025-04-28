@@ -10,15 +10,15 @@ import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
 import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
 import 'package:http/http.dart' as http;
 
-class MaterialScreen extends StatefulWidget {
-  const MaterialScreen({super.key});
+class GoodReceived extends StatefulWidget {
+  const GoodReceived({super.key});
 
   @override
-  State<MaterialScreen> createState() => _MaterialScreenState();
+  State<GoodReceived> createState() => _GoodReceivedState();
 }
 
-class _MaterialScreenState extends State<MaterialScreen> {
-  List<dynamic> materialList = [];
+class _GoodReceivedState extends State<GoodReceived> {
+  List<dynamic> goodReceivedList = [];
   List<dynamic> _projectList = [];
   bool isLoading = true;
   String? selectedOption;
@@ -26,21 +26,21 @@ class _MaterialScreenState extends State<MaterialScreen> {
   @override
   void initState() {
     super.initState();
-    fetchMaterial();
+    fetchGoodReceived();
     fetchProject();
   }
 
-  Future<void> fetchMaterial() async {
+  Future<void> fetchGoodReceived() async {
     try {
       final response = await http.get(Uri.parse(
-          'https://kuncoro-api-warehouse.site/api/material/getdata-material'));
+          'https://kuncoro-api-warehouse.site/api/good-received/data-good-received-all'));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> decoded = jsonDecode(response.body);
         final List<dynamic> data = decoded['data'];
 
         setState(() {
-          materialList = data;
+          goodReceivedList = data;
           isLoading = false;
         });
       } else {
@@ -358,7 +358,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
                             DataColumn(label: Text('Harga')),
                             DataColumn(label: Text('Nama Proyek')),
                           ],
-                          rows: materialList.map((item) {
+                          rows: goodReceivedList.map((item) {
                             return DataRow(cells: [
                               DataCell(Text('${item['kode_material'] ?? '-'}')),
                               DataCell(Text('${item['nama_material'] ?? '-'}')),
@@ -392,6 +392,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
 class PageTambah extends StatefulWidget {
   final String title;
   final List<dynamic> projectList;
+
   const PageTambah({super.key, required this.projectList, required this.title});
 
   @override
@@ -399,120 +400,439 @@ class PageTambah extends StatefulWidget {
 }
 
 class _PageTambahState extends State<PageTambah> {
-  final TextEditingController _namaMaterialController = TextEditingController();
-  final TextEditingController _spesifikasiMaterialController =
-      TextEditingController();
+  // Controller buat input
+  final TextEditingController _tanggalMasukController = TextEditingController();
+  final TextEditingController _noSuratJalanController = TextEditingController();
+  final TextEditingController _namaSupplierController = TextEditingController();
+  final TextEditingController _namaProjectController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
-  final TextEditingController _jenisQuantityController =
-      TextEditingController();
-  final TextEditingController _hargaMaterialController =
-      TextEditingController();
+  final TextEditingController _keteranganController = TextEditingController();
 
-  final TextEditingController _jenisMaterialController =
-      TextEditingController();
+  // State variabel
+  String? _selectedJenisBarang;
+  String? _selectedMaterial;
+  String? _selectedConsuamble;
+  String? _selectedTools;
+  String? _selectedQuantityJenis;
 
-  int? _selectedProjectId;
+  List<Map<String, dynamic>> materialOptions = [];
 
-  Future<void> _submitForm() async {
-    if (_namaMaterialController.text.isEmpty ||
-        _quantityController.text.isEmpty ||
-        _jenisQuantityController.text.isEmpty ||
-        _hargaMaterialController.text.isEmpty ||
-        _jenisMaterialController.text.isEmpty ||
-        _selectedProjectId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lengkapi semua data terlebih dahulu')),
-      );
-      return;
-    }
+  List<Map<String, dynamic>> consumableOptions = [];
+  List<Map<String, dynamic>> toolsOptions = [];
 
-    final uri = Uri.parse(
-        'https://kuncoro-api-warehouse.site/api/material/create-material');
+  bool isLoadingMaterial = false;
+  bool isLoadingConsumable = false;
+  bool isLoadingTools = false;
 
-    final response = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'nama_material': _namaMaterialController.text,
-        'spesifikasi_material': _spesifikasiMaterialController.text,
-        'quantity': int.tryParse(_quantityController.text) ?? 0,
-        'jenis_quantity': _jenisQuantityController.text,
-        'jenis_material': _jenisQuantityController.text,
-        'harga_material': _hargaMaterialController.text,
-        'project_id': _selectedProjectId,
-      }),
-    );
+  final List<Map<String, String>> _listBarang = [];
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data berhasil disimpan')),
-      );
-      Navigator.pop(context);
-    } else {
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal menyimpan data')),
-      );
+  // Dropdown options
+  final List<String> jenisBarangOptions = ['Material', 'Consumable', 'Tools'];
+
+  final List<String> quantityJenisOptions = [
+    'Pilih Salah Satu',
+    'Pcs',
+    'Kg',
+    'Meter'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchMaterialOptions();
+    fetchConsumable();
+    fetchTools();
+  }
+
+  // Fetch data Material
+  Future<void> fetchMaterialOptions() async {
+    setState(() {
+      isLoadingMaterial = true;
+    });
+
+    try {
+      final response = await http.get(Uri.parse(
+          'https://kuncoro-api-warehouse.site/api/material/getdata-material')); // <-- ganti dengan URL asli
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        setState(() {
+          materialOptions = List<Map<String, dynamic>>.from(
+            data['data'].map((item) => {
+                  'nama_material': item['nama_material'],
+                  'project_id': item['project_id'],
+                }),
+          );
+          isLoadingMaterial = false;
+        });
+      } else {
+        setState(() {
+          isLoadingMaterial = false;
+        });
+        print(
+            'Failed to load material options. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        isLoadingMaterial = false;
+      });
+      print('Error fetching material options: $e');
     }
   }
 
-  @override
+  // Fetch data Consumable
+
+  // Fungsi fetchConsumable
+  Future<void> fetchConsumable() async {
+    setState(() {
+      isLoadingConsumable = true;
+    });
+
+    try {
+      final response = await http.get(Uri.parse(
+          'https://kuncoro-api-warehouse.site/api/consumable/getdata-consumable'));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          consumableOptions = List<Map<String, dynamic>>.from(
+            data['data'].map((item) => {
+                  'nama_consumable': item['nama_consumable'],
+                  'id': item['id'], // asumsi kalau ada id
+                }),
+          );
+          isLoadingConsumable = false;
+        });
+      } else {
+        setState(() {
+          isLoadingConsumable = false;
+        });
+        print(
+            'Failed to load consumables. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        isLoadingConsumable = false;
+      });
+      print('Error fetching consumables: $e');
+    }
+  }
+
+  // Fetch data Tools
+  Future<void> fetchTools() async {
+    setState(() {
+      isLoadingTools = true; // Perbaiki, jangan isLoadingConsumable
+    });
+
+    try {
+      final response = await http.get(Uri.parse(
+          'https://kuncoro-api-warehouse.site/api/tools/getdata-tools'));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          toolsOptions = List<Map<String, dynamic>>.from(
+            data['data'].map((item) => {
+                  'nama_alat': item['nama_alat'],
+                }),
+          );
+          isLoadingTools = false;
+        });
+      } else {
+        setState(() {
+          isLoadingTools = false;
+        });
+        print('Failed to load tools. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        isLoadingTools = false;
+      });
+      print('Error fetching tools: $e');
+    }
+  }
+
   Widget build(BuildContext context) {
+    bool isMobile = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
+      appBar: AppBar(
+        title: Text('Form Input Barang'),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextFormField(
-              controller: _namaMaterialController,
-              decoration: const InputDecoration(labelText: 'Nama Material'),
-            ),
-            TextFormField(
-              controller: _spesifikasiMaterialController,
-              decoration: const InputDecoration(labelText: 'Spesifikasi'),
-            ),
-            TextFormField(
-              controller: _quantityController,
-              decoration: const InputDecoration(labelText: 'Quantity'),
-              keyboardType: TextInputType.number,
-            ),
-            TextFormField(
-              controller: _jenisMaterialController,
-              decoration: const InputDecoration(labelText: 'Jenis Material'),
-            ),
-            TextFormField(
-              controller: _jenisQuantityController,
-              decoration: const InputDecoration(labelText: 'Jenis Quantity'),
-            ),
-            TextFormField(
-              controller: _hargaMaterialController,
-              decoration: const InputDecoration(labelText: 'Harga'),
-            ),
-            DropdownButtonFormField<int>(
-              value: _selectedProjectId,
-              hint: const Text('Pilih Proyek'),
-              items: widget.projectList.map<DropdownMenuItem<int>>((project) {
-                return DropdownMenuItem<int>(
-                  value: project['id'],
-                  child: Text('${project['nama_project']}'),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedProjectId = value;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
+            isMobile
+                ? Column(
+                    children: [
+                      _buildFormDataAlamat(),
+                      SizedBox(height: 16),
+                      _buildFormBarang(),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: _buildFormDataAlamat()),
+                      SizedBox(width: 16),
+                      Expanded(child: _buildFormBarang()),
+                    ],
+                  ),
+            SizedBox(height: 24),
+            _buildBarangList(),
+            SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _submitForm,
-              child: const Text('Simpan'),
+              onPressed: () {
+                // TODO: Submit action
+              },
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+              child: Text('Submit'),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildFormDataAlamat() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Form Data Alamat',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 16),
+            _buildTextField(_tanggalMasukController, 'Tanggal Masuk Barang',
+                readOnly: true, onTap: () async {
+              DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2101),
+              );
+              if (picked != null) {
+                _tanggalMasukController.text =
+                    "${picked.toLocal()}".split(' ')[0];
+              }
+            }),
+            _buildTextField(_noSuratJalanController, 'No Surat Jalan'),
+            _buildTextField(_namaSupplierController, 'Nama Supplier'),
+            _buildTextField(_namaProjectController, 'Nama Project'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormBarang() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Form Barang',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 16),
+
+            // Pilih Jenis Barang
+            DropdownButtonFormField<String>(
+              value: _selectedJenisBarang,
+              hint: Text('-- Pilih Jenis Barang --'),
+              items: jenisBarangOptions
+                  .map((item) =>
+                      DropdownMenuItem(value: item, child: Text(item)))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedJenisBarang = value;
+                  _selectedMaterial = null;
+                  _selectedConsuamble = null;
+                  _selectedTools = null;
+                });
+              },
+            ),
+            SizedBox(height: 16),
+
+            if (_selectedJenisBarang == 'Material') ...[
+              DropdownButtonFormField<String>(
+                value: _selectedMaterial,
+                hint: Text('-- Pilih Material --'),
+                items: materialOptions.map((item) {
+                  return DropdownMenuItem<String>(
+                    value:
+                        item['nama_material'], // ambil nama_material dari map
+                    child: Text(item['nama_material']),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedMaterial = value;
+                  });
+                },
+              ),
+              SizedBox(height: 16),
+            ] else if (_selectedJenisBarang == 'Consumable') ...[
+              DropdownButtonFormField<String>(
+                value: _selectedConsuamble,
+                hint: Text('-- Pilih Consumable --'),
+                items: consumableOptions.map((item) {
+                  return DropdownMenuItem<String>(
+                    value: item[
+                        'nama_consumable'], // ambil nama_consumable dari map
+                    child: Text(item['nama_consumable']),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedMaterial = value;
+                  });
+                },
+              ),
+              SizedBox(height: 16),
+            ] else if (_selectedJenisBarang == 'Tools') ...[
+              DropdownButtonFormField<String>(
+                value: _selectedTools,
+                hint: Text('-- Pilih Tools --'),
+                items: toolsOptions.map((item) {
+                  return DropdownMenuItem<String>(
+                    value: item[
+                        'nama_alat'], // kalau field tools dari API adalah 'nama_alat'
+                    child: Text(item['nama_alat']),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedMaterial = value;
+                  });
+                },
+              ),
+            ],
+
+            _buildTextField(_quantityController, 'Quantity'),
+            SizedBox(height: 16),
+
+            // Quantity Type
+            DropdownButtonFormField<String>(
+              value: _selectedQuantityJenis,
+              hint: Text('Pilih Salah Satu'),
+              items: quantityJenisOptions
+                  .map((item) =>
+                      DropdownMenuItem(value: item, child: Text(item)))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedQuantityJenis = value;
+                });
+              },
+            ),
+            SizedBox(height: 16),
+
+            _buildTextField(_keteranganController, 'Keterangan Barang',
+                maxLines: 3),
+            SizedBox(height: 16),
+
+            // Button
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: _tambahBarang,
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: Text('Tambah Barang'),
+                ),
+                SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                  child: Text('Go back'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBarangList() {
+    return Card(
+      elevation: 2,
+      child: _listBarang.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(child: Text('No Item Found')),
+            )
+          : ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: _listBarang.length,
+              itemBuilder: (context, index) {
+                final item = _listBarang[index];
+                return ListTile(
+                  leading: Text('${index + 1}'),
+                  title: Text(item['nama'] ?? ''),
+                  subtitle: Text(
+                      '${item['jenis']} - ${item['quantity']} ${item['qty_jenis']}'),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      setState(() {
+                        _listBarang.removeAt(index);
+                      });
+                    },
+                  ),
+                );
+              },
+            ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label,
+      {bool readOnly = false, int maxLines = 1, VoidCallback? onTap}) {
+    return TextField(
+      controller: controller,
+      readOnly: readOnly,
+      maxLines: maxLines,
+      onTap: onTap,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+      ),
+    );
+  }
+
+  void _tambahBarang() {
+    if (_selectedJenisBarang == null || _quantityController.text.isEmpty)
+      return;
+
+    setState(() {
+      _listBarang.add({
+        'nama': _selectedJenisBarang == 'Material'
+            ? (_selectedMaterial ?? '')
+            : _selectedJenisBarang!,
+        'jenis': _selectedJenisBarang!,
+        'material':
+            _selectedJenisBarang == 'Material' ? (_selectedMaterial ?? '') : '',
+        'quantity': _quantityController.text,
+        'qty_jenis': _selectedQuantityJenis ?? '',
+      });
+    });
+
+    _quantityController.clear();
+    _keteranganController.clear();
+    _selectedJenisBarang = null;
+    _selectedMaterial = null;
+    _selectedQuantityJenis = null;
   }
 }

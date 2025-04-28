@@ -10,15 +10,15 @@ import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
 import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
 import 'package:http/http.dart' as http;
 
-class ToolsScreen extends StatefulWidget {
-  const ToolsScreen({super.key});
+class DeliveryOrderScreen extends StatefulWidget {
+  const DeliveryOrderScreen({super.key});
 
   @override
-  State<ToolsScreen> createState() => _ToolState();
+  State<DeliveryOrderScreen> createState() => _DeliveryOrderState();
 }
 
-class _ToolState extends State<ToolsScreen> {
-  List<dynamic> toolsList = [];
+class _DeliveryOrderState extends State<DeliveryOrderScreen> {
+  List<dynamic> materialList = [];
   List<dynamic> _projectList = [];
   bool isLoading = true;
   String? selectedOption;
@@ -26,20 +26,21 @@ class _ToolState extends State<ToolsScreen> {
   @override
   void initState() {
     super.initState();
-    fetchTools();
+    fetchMaterial();
+    fetchProject();
   }
 
-  Future<void> fetchTools() async {
+  Future<void> fetchMaterial() async {
     try {
       final response = await http.get(Uri.parse(
-          'https://kuncoro-api-warehouse.site/api/tools/getdata-tools'));
+          'https://kuncoro-api-warehouse.site/api/material/getdata-material'));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> decoded = jsonDecode(response.body);
         final List<dynamic> data = decoded['data'];
 
         setState(() {
-          toolsList = data;
+          materialList = data;
           isLoading = false;
         });
       } else {
@@ -50,6 +51,26 @@ class _ToolState extends State<ToolsScreen> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> fetchProject() async {
+    try {
+      final response = await http.get(Uri.parse(
+          'https://kuncoro-api-warehouse.site/api/proyek/getdata-proyek'));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> decoded = jsonDecode(response.body);
+        final List<dynamic> data = decoded['data'];
+
+        setState(() {
+          _projectList = data;
+        });
+      } else {
+        throw Exception('Failed to load projects');
+      }
+    } catch (e) {
+      print('Error fetching projects: $e');
     }
   }
 
@@ -147,15 +168,9 @@ class _ToolState extends State<ToolsScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.insert_chart),
+              leading: const Icon(Icons.build),
               title: const Text('Data Alat'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ToolsScreen()),
-                );
-              },
+              onTap: () {},
             ),
             const Divider(),
             const Padding(
@@ -186,7 +201,7 @@ class _ToolState extends State<ToolsScreen> {
         ),
       ),
       appBar: AppBar(
-        title: const Text('Data Alat Kebutuhan'),
+        title: const Text('Data Material'),
         actions: [
           Row(
             children: [
@@ -229,7 +244,7 @@ class _ToolState extends State<ToolsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Menu Alat',
+                        'Menu Material',
                         style: theme.textTheme.titleLarge!
                             .copyWith(fontWeight: FontWeight.bold),
                       ),
@@ -335,25 +350,32 @@ class _ToolState extends State<ToolsScreen> {
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
                           columns: const [
-                            DataColumn(label: Text('Kode Alat')),
-                            DataColumn(label: Text('Nama Alat')),
-                            DataColumn(label: Text('Spesifikasi Alat')),
-                            DataColumn(label: Text('Jenis Alat')),
-                            DataColumn(label: Text('Tipe Alat')),
+                            DataColumn(label: Text('Kode Material')),
+                            DataColumn(label: Text('Nama Material')),
+                            DataColumn(label: Text('Spesifikasi')),
                             DataColumn(label: Text('Quantity')),
                             DataColumn(label: Text('Jenis Quantity')),
+                            DataColumn(label: Text('Harga')),
+                            DataColumn(label: Text('Nama Proyek')),
                           ],
-                          rows: toolsList.map((item) {
+                          rows: materialList.map((item) {
                             return DataRow(cells: [
-                              DataCell(Text('${item['kode_alat'] ?? '-'}')),
-                              DataCell(Text('${item['nama_alat'] ?? '-'}')),
-                              DataCell(
-                                  Text('${item['spesifikasi_alat'] ?? '-'}')),
-                              DataCell(Text('${item['jenis_alat'] ?? '-'}')),
-                              DataCell(Text('${item['tipe_alat'] ?? '-'}')),
+                              DataCell(Text('${item['kode_material'] ?? '-'}')),
+                              DataCell(Text('${item['nama_material'] ?? '-'}')),
+                              DataCell(Text(
+                                  '${item['spesifikasi_material'] ?? '-'}')),
                               DataCell(Text('${item['quantity'] ?? '-'}')),
                               DataCell(
                                   Text('${item['jenis_quantity'] ?? '-'}')),
+                              DataCell(
+                                  Text('${item['harga_material'] ?? '-'}')),
+                              DataCell(
+                                Text(
+                                  item['project'] != null
+                                      ? '${item['project']['nama_project'] ?? '-'} | ${item['project']['sub_nama_project'] ?? '-'}'
+                                      : '-',
+                                ),
+                              ),
                             ]);
                           }).toList(),
                         ),
@@ -377,41 +399,47 @@ class PageTambah extends StatefulWidget {
 }
 
 class _PageTambahState extends State<PageTambah> {
-  final TextEditingController _namaAlatController = TextEditingController();
-  final TextEditingController _spesifikasiAlatController =
+  final TextEditingController _namaMaterialController = TextEditingController();
+  final TextEditingController _spesifikasiMaterialController =
       TextEditingController();
-  final TextEditingController _jenisAlatController = TextEditingController();
-  final TextEditingController _tipeAlatController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _jenisQuantityController =
       TextEditingController();
+  final TextEditingController _hargaMaterialController =
+      TextEditingController();
+
+  final TextEditingController _jenisMaterialController =
+      TextEditingController();
+
+  int? _selectedProjectId;
 
   Future<void> _submitForm() async {
-    if (_namaAlatController.text.isEmpty ||
-        _spesifikasiAlatController.text.isEmpty ||
-        _jenisAlatController.text.isEmpty ||
-        _tipeAlatController.text.isEmpty ||
+    if (_namaMaterialController.text.isEmpty ||
         _quantityController.text.isEmpty ||
-        _jenisQuantityController.text.isEmpty) {
+        _jenisQuantityController.text.isEmpty ||
+        _hargaMaterialController.text.isEmpty ||
+        _jenisMaterialController.text.isEmpty ||
+        _selectedProjectId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lengkapi semua data terlebih dahulu')),
       );
       return;
     }
 
-    final uri =
-        Uri.parse('https://kuncoro-api-warehouse.site/api/tools/create-tools');
+    final uri = Uri.parse(
+        'https://kuncoro-api-warehouse.site/api/material/create-material');
 
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'nama_alat': _namaAlatController.text,
-        'spesifikasi_alat': _spesifikasiAlatController.text,
-        'jenis_alat': _jenisAlatController.text,
-        'tipe_alat': _tipeAlatController.text,
-        'quantity': int.tryParse(_quantityController.text.trim()) ?? 0,
+        'nama_material': _namaMaterialController.text,
+        'spesifikasi_material': _spesifikasiMaterialController.text,
+        'quantity': int.tryParse(_quantityController.text) ?? 0,
         'jenis_quantity': _jenisQuantityController.text,
+        'jenis_material': _jenisQuantityController.text,
+        'harga_material': _hargaMaterialController.text,
+        'project_id': _selectedProjectId,
       }),
     );
 
@@ -438,46 +466,45 @@ class _PageTambahState extends State<PageTambah> {
         child: ListView(
           children: [
             TextFormField(
-              controller: _namaAlatController,
-              decoration: const InputDecoration(labelText: 'Nama Alat'),
+              controller: _namaMaterialController,
+              decoration: const InputDecoration(labelText: 'Nama Material'),
             ),
             TextFormField(
-              controller: _spesifikasiAlatController,
+              controller: _spesifikasiMaterialController,
               decoration: const InputDecoration(labelText: 'Spesifikasi'),
-            ),
-            TextFormField(
-              controller: _jenisAlatController,
-              decoration: const InputDecoration(labelText: 'Jenis Alat'),
-            ),
-            TextFormField(
-              controller: _tipeAlatController,
-              decoration: const InputDecoration(labelText: 'Tipe Alat'),
             ),
             TextFormField(
               controller: _quantityController,
               decoration: const InputDecoration(labelText: 'Quantity'),
               keyboardType: TextInputType.number,
             ),
-
+            TextFormField(
+              controller: _jenisMaterialController,
+              decoration: const InputDecoration(labelText: 'Jenis Material'),
+            ),
             TextFormField(
               controller: _jenisQuantityController,
               decoration: const InputDecoration(labelText: 'Jenis Quantity'),
             ),
-            // DropdownButtonFormField<int>(
-            //   value: _selectedProjectId,
-            //   hint: const Text('Pilih Proyek'),
-            //   items: widget.projectList.map<DropdownMenuItem<int>>((project) {
-            //     return DropdownMenuItem<int>(
-            //       value: project['id'],
-            //       child: Text('${project['nama_project']}'),
-            //     );
-            //   }).toList(),
-            //   onChanged: (value) {
-            //     setState(() {
-            //       _selectedProjectId = value;
-            //     });
-            //   },
-            // ),
+            TextFormField(
+              controller: _hargaMaterialController,
+              decoration: const InputDecoration(labelText: 'Harga'),
+            ),
+            DropdownButtonFormField<int>(
+              value: _selectedProjectId,
+              hint: const Text('Pilih Proyek'),
+              items: widget.projectList.map<DropdownMenuItem<int>>((project) {
+                return DropdownMenuItem<int>(
+                  value: project['id'],
+                  child: Text('${project['nama_project']}'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedProjectId = value;
+                });
+              },
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _submitForm,
