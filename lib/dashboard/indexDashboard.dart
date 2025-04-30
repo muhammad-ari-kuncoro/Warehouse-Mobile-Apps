@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_apps_wh/ConsumableIssuance/indexDataConsumableIssuance.dart';
+import 'package:mobile_apps_wh/MaterialIssuance/indexMaterialIssuance.dart';
 import 'package:mobile_apps_wh/homePage.dart';
 import 'package:mobile_apps_wh/main.dart';
 import 'package:mobile_apps_wh/menuGoodReceived/indexGoodReceived.dart';
@@ -288,6 +290,45 @@ class SideBar extends StatelessWidget {
               navigateWithSlide(context, const DummyPage(title: 'Laporan'));
             },
           ),
+          // Heading
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+            child: Text(
+              '— Dokumen Produksi',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.inventory_2),
+            title: const Text('Pemakaian Consumable'),
+            onTap: () {
+              Navigator.pop(context); // Tutup drawer dulu
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        const IndexdataconsumableissuanceScreen()),
+              );
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.inventory),
+            title: const Text('Pemakaian Material'),
+            onTap: () {
+              Navigator.pop(context); // Tutup drawer dulu
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const Indexdatamaterialissuance()),
+              );
+            },
+          ),
+
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout),

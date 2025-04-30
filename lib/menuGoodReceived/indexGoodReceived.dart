@@ -406,7 +406,49 @@ class _PageTambahState extends State<PageTambah> {
   final TextEditingController _namaSupplierController = TextEditingController();
   final TextEditingController _namaProjectController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
-  final TextEditingController _keteranganController = TextEditingController();
+  final TextEditingController _kodeSuratJalan = TextEditingController();
+
+  int? _selectedProjectId;
+
+  Future<void> _submitForm() async {
+    if (_tanggalMasukController.text.isEmpty ||
+        _noSuratJalanController.text.isEmpty ||
+        _namaSupplierController.text.isEmpty ||
+        _kodeSuratJalan.text.isEmpty ||
+        _selectedProjectId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lengkapi semua data terlebih dahulu')),
+      );
+      return;
+    }
+
+    final uri =
+        Uri.parse('https://kuncoro-api-warehouse.site/api/tools/create-tools');
+
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'tanggal_masuk': _tanggalMasukController.text,
+        'nama_supplier': _namaSupplierController.text,
+        'kode_surat_jalan': _kodeSuratJalan.text,
+        'project_id': _selectedProjectId,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data berhasil disimpan')),
+      );
+      Navigator.pop(context);
+    } else {
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal menyimpan data')),
+      );
+    }
+  }
 
   // State variabel
   String? _selectedJenisBarang;
@@ -736,8 +778,6 @@ class _PageTambahState extends State<PageTambah> {
             ),
             SizedBox(height: 16),
 
-            _buildTextField(_keteranganController, 'Keterangan Barang',
-                maxLines: 3),
             SizedBox(height: 16),
 
             // Button
@@ -830,7 +870,6 @@ class _PageTambahState extends State<PageTambah> {
     });
 
     _quantityController.clear();
-    _keteranganController.clear();
     _selectedJenisBarang = null;
     _selectedMaterial = null;
     _selectedQuantityJenis = null;

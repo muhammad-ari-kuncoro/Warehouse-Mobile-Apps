@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:mobile_apps_wh/Services/theme_services.dart';
 import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
 import 'package:mobile_apps_wh/main.dart';
+import 'package:mobile_apps_wh/menuConsumable/consumableIndex.dart';
 import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
 import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
 import 'package:http/http.dart' as http;
@@ -136,7 +137,14 @@ class _ProjectScreenState extends State<ProjectScreen> {
             ListTile(
               leading: const Icon(Icons.insert_chart_rounded),
               title: const Text('Data Consumable'),
-              onTap: () {},
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ConsumableScreen()),
+                );
+              },
             ),
             ListTile(
               leading: const Icon(Icons.build),
