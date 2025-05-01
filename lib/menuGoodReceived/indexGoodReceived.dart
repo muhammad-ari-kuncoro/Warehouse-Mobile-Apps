@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_apps_wh/Services/theme_services.dart';
 import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
@@ -33,7 +34,7 @@ class _GoodReceivedState extends State<GoodReceived> {
   Future<void> fetchGoodReceived() async {
     try {
       final response = await http.get(Uri.parse(
-          'https://kuncoro-api-warehouse.site/api/good-received/data-good-received-all'));
+          'https://kuncoro-api-warehouse.site/api/good-received/get-data'));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> decoded = jsonDecode(response.body);
@@ -453,16 +454,18 @@ class _PageTambahState extends State<PageTambah> {
   // State variabel
   String? _selectedJenisBarang;
   String? _selectedMaterial;
-  String? _selectedConsuamble;
+  String? _selectedProject;
+  String? _selectedConsumable;
   String? _selectedTools;
   String? _selectedQuantityJenis;
 
   List<Map<String, dynamic>> materialOptions = [];
-
+  List<Map<String, dynamic>> projectOptions = [];
   List<Map<String, dynamic>> consumableOptions = [];
   List<Map<String, dynamic>> toolsOptions = [];
 
   bool isLoadingMaterial = false;
+  bool isLoadingProject = false;
   bool isLoadingConsumable = false;
   bool isLoadingTools = false;
 
@@ -482,6 +485,7 @@ class _PageTambahState extends State<PageTambah> {
   void initState() {
     super.initState();
     fetchMaterialOptions();
+    fetchProjectOptions();
     fetchConsumable();
     fetchTools();
   }
@@ -503,7 +507,7 @@ class _PageTambahState extends State<PageTambah> {
           materialOptions = List<Map<String, dynamic>>.from(
             data['data'].map((item) => {
                   'nama_material': item['nama_material'],
-                  'project_id': item['project_id'],
+                  'id': item['id'].toString(),
                 }),
           );
           isLoadingMaterial = false;
@@ -520,6 +524,43 @@ class _PageTambahState extends State<PageTambah> {
         isLoadingMaterial = false;
       });
       print('Error fetching material options: $e');
+    }
+  }
+
+  // Fetch data Material
+  Future<void> fetchProjectOptions() async {
+    setState(() {
+      isLoadingProject = true;
+    });
+
+    try {
+      final response = await http.get(Uri.parse(
+          'https://kuncoro-api-warehouse.site/api/proyek/getdata-proyek')); // <-- ganti dengan URL asli
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        setState(() {
+          projectOptions = List<Map<String, dynamic>>.from(
+            data['data'].map((item) => {
+                  'id': item['id'].toString(),
+                  'nama_project': item['nama_project'],
+                }),
+          );
+          isLoadingProject = false;
+        });
+      } else {
+        setState(() {
+          isLoadingProject = false;
+        });
+        print(
+            'Failed to load project options. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        isLoadingProject = false;
+      });
+      print('Error fetching project options: $e');
     }
   }
 
@@ -541,7 +582,7 @@ class _PageTambahState extends State<PageTambah> {
           consumableOptions = List<Map<String, dynamic>>.from(
             data['data'].map((item) => {
                   'nama_consumable': item['nama_consumable'],
-                  'id': item['id'], // asumsi kalau ada id
+                  'id': item['id'].toString(), // asumsi kalau ada id
                 }),
           );
           isLoadingConsumable = false;
@@ -577,6 +618,7 @@ class _PageTambahState extends State<PageTambah> {
           toolsOptions = List<Map<String, dynamic>>.from(
             data['data'].map((item) => {
                   'nama_alat': item['nama_alat'],
+                  'id': item['id'].toString(),
                 }),
           );
           isLoadingTools = false;
@@ -627,9 +669,7 @@ class _PageTambahState extends State<PageTambah> {
             _buildBarangList(),
             SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () {
-                // TODO: Submit action
-              },
+              onPressed: _tambahBarang,
               style:
                   ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
               child: Text('Submit'),
@@ -664,9 +704,27 @@ class _PageTambahState extends State<PageTambah> {
                     "${picked.toLocal()}".split(' ')[0];
               }
             }),
+            SizedBox(height: 8),
             _buildTextField(_noSuratJalanController, 'No Surat Jalan'),
+            SizedBox(height: 8),
             _buildTextField(_namaSupplierController, 'Nama Supplier'),
-            _buildTextField(_namaProjectController, 'Nama Project'),
+            SizedBox(height: 8),
+            // Pilih Jenis Barang
+            DropdownButtonFormField<String>(
+              value: _selectedProject,
+              hint: Text('-- Pilih Project --'),
+              items: projectOptions.map((item) {
+                return DropdownMenuItem<String>(
+                  value: item['id'],
+                  child: Text(item['nama_project']),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedProject = value;
+                });
+              },
+            ),
           ],
         ),
       ),
@@ -697,7 +755,7 @@ class _PageTambahState extends State<PageTambah> {
                 setState(() {
                   _selectedJenisBarang = value;
                   _selectedMaterial = null;
-                  _selectedConsuamble = null;
+                  _selectedConsumable = null;
                   _selectedTools = null;
                 });
               },
@@ -710,8 +768,7 @@ class _PageTambahState extends State<PageTambah> {
                 hint: Text('-- Pilih Material --'),
                 items: materialOptions.map((item) {
                   return DropdownMenuItem<String>(
-                    value:
-                        item['nama_material'], // ambil nama_material dari map
+                    value: item['id'], // ambil nama_material dari map
                     child: Text(item['nama_material']),
                   );
                 }).toList(),
@@ -724,18 +781,17 @@ class _PageTambahState extends State<PageTambah> {
               SizedBox(height: 16),
             ] else if (_selectedJenisBarang == 'Consumable') ...[
               DropdownButtonFormField<String>(
-                value: _selectedConsuamble,
+                value: _selectedConsumable,
                 hint: Text('-- Pilih Consumable --'),
                 items: consumableOptions.map((item) {
                   return DropdownMenuItem<String>(
-                    value: item[
-                        'nama_consumable'], // ambil nama_consumable dari map
+                    value: item['id'], // ambil nama_consumable dari map
                     child: Text(item['nama_consumable']),
                   );
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    _selectedMaterial = value;
+                    _selectedConsumable = value;
                   });
                 },
               ),
@@ -747,19 +803,20 @@ class _PageTambahState extends State<PageTambah> {
                 items: toolsOptions.map((item) {
                   return DropdownMenuItem<String>(
                     value: item[
-                        'nama_alat'], // kalau field tools dari API adalah 'nama_alat'
+                        'id'], // kalau field tools dari API adalah 'nama_alat'
                     child: Text(item['nama_alat']),
                   );
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    _selectedMaterial = value;
+                    _selectedTools = value;
                   });
                 },
               ),
             ],
 
             _buildTextField(_quantityController, 'Quantity'),
+            // _buildIntegerField(_quantityController, 'Quantity'),
             SizedBox(height: 16),
 
             // Quantity Type
@@ -852,26 +909,114 @@ class _PageTambahState extends State<PageTambah> {
     );
   }
 
-  void _tambahBarang() {
-    if (_selectedJenisBarang == null || _quantityController.text.isEmpty)
+  Widget _buildIntegerField(TextEditingController controller, String label) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+      ),
+      keyboardType: TextInputType.number, // hanya angka
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(
+            RegExp(r'[0-9]')), // hanya angka yang diperbolehkan
+      ],
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Field ini tidak boleh kosong';
+        }
+
+        // Pastikan input angka dan lebih besar dari 0
+        final intValue = int.tryParse(value);
+        if (intValue == null) {
+          return 'Harus berupa angka';
+        }
+
+        if (intValue < 1) {
+          return 'Jumlah harus minimal 1';
+        }
+
+        return null;
+      },
+    );
+  }
+
+  // void _tambahBarang() {
+  //   if (_selectedJenisBarang == null || _quantityController.text.isEmpty)
+  //     return;
+
+  //   setState(() {
+  //     _listBarang.add({
+  //       'nama': _selectedJenisBarang == 'Material'
+  //           ? (_selectedMaterial ?? '')
+  //           : _selectedJenisBarang!,
+  //       'jenis': _selectedJenisBarang!,
+  //       'material':
+  //           _selectedJenisBarang == 'Material' ? (_selectedMaterial ?? '') : '',
+  //       'quantity': _quantityController.text,
+  //       'qty_jenis': _selectedQuantityJenis ?? '',
+  //     });
+  //   });
+
+  //   _quantityController.clear();
+  //   _selectedJenisBarang = null;
+  //   _selectedMaterial = null;
+  //   _selectedQuantityJenis = null;
+  // }
+
+  void _tambahBarang() async {
+    // Validasi input Quantity
+    final quantity = int.tryParse(_quantityController.text);
+
+    if (quantity == null || quantity < 1) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Jumlah harus minimal 1')));
       return;
+    }
 
-    setState(() {
-      _listBarang.add({
-        'nama': _selectedJenisBarang == 'Material'
-            ? (_selectedMaterial ?? '')
-            : _selectedJenisBarang!,
-        'jenis': _selectedJenisBarang!,
-        'material':
-            _selectedJenisBarang == 'Material' ? (_selectedMaterial ?? '') : '',
-        'quantity': _quantityController.text,
-        'qty_jenis': _selectedQuantityJenis ?? '',
-      });
-    });
+    // Tentukan idBarang sesuai dengan jenis barang yang dipilih
+    String? idBarang;
+    if (_selectedJenisBarang == 'Material') {
+      idBarang = _selectedMaterial; // Gunakan material_id
+    } else if (_selectedJenisBarang == 'Consumable') {
+      idBarang = _selectedConsumable; // Gunakan consumable_id
+    } else if (_selectedJenisBarang == 'Tools') {
+      idBarang = _selectedTools; // Gunakan tool_id
+    }
+    if (idBarang == null || _selectedQuantityJenis == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Lengkapi semua field')));
+      return;
+    }
 
-    _quantityController.clear();
-    _selectedJenisBarang = null;
-    _selectedMaterial = null;
-    _selectedQuantityJenis = null;
+    // Buat data JSON berdasarkan jenis barang yang dipilih
+    final data = {
+      'jenis_barang': _selectedJenisBarang,
+      '${_selectedJenisBarang?.toLowerCase()}_id': idBarang,
+      'quantity': quantity,
+      'quantity_jenis': _selectedQuantityJenis,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'https://kuncoro-api-warehouse.site/api/good-received/store/item'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Barang berhasil ditambahkan')));
+      } else {
+        print('Gagal: ${response.body}');
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Gagal tambah barang')));
+      }
+    } catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Terjadi kesalahan jaringan')));
+    }
   }
 }
