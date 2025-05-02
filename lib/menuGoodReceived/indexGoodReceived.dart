@@ -34,7 +34,7 @@ class _GoodReceivedState extends State<GoodReceived> {
   Future<void> fetchGoodReceived() async {
     try {
       final response = await http.get(Uri.parse(
-          'https://kuncoro-api-warehouse.site/api/good-received/get-data'));
+          'http://kuncoro-api-warehouse.site/api/good-received/get-data'));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> decoded = jsonDecode(response.body);
@@ -58,7 +58,7 @@ class _GoodReceivedState extends State<GoodReceived> {
   Future<void> fetchProject() async {
     try {
       final response = await http.get(Uri.parse(
-          'https://kuncoro-api-warehouse.site/api/proyek/getdata-proyek'));
+          'http://kuncoro-api-warehouse.site/api/proyek/getdata-proyek'));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> decoded = jsonDecode(response.body);
@@ -424,7 +424,7 @@ class _PageTambahState extends State<PageTambah> {
     }
 
     final uri =
-        Uri.parse('https://kuncoro-api-warehouse.site/api/tools/create-tools');
+        Uri.parse('http://kuncoro-api-warehouse.site/api/tools/create-tools');
 
     final response = await http.post(
       uri,
@@ -463,13 +463,12 @@ class _PageTambahState extends State<PageTambah> {
   List<Map<String, dynamic>> projectOptions = [];
   List<Map<String, dynamic>> consumableOptions = [];
   List<Map<String, dynamic>> toolsOptions = [];
+  List<dynamic> _listBarang = [];
 
   bool isLoadingMaterial = false;
   bool isLoadingProject = false;
   bool isLoadingConsumable = false;
   bool isLoadingTools = false;
-
-  final List<Map<String, String>> _listBarang = [];
 
   // Dropdown options
   final List<String> jenisBarangOptions = ['Material', 'Consumable', 'Tools'];
@@ -488,6 +487,53 @@ class _PageTambahState extends State<PageTambah> {
     fetchProjectOptions();
     fetchConsumable();
     fetchTools();
+    _fetchBarangFromAPI();
+  }
+
+  Future<void> _fetchBarangFromAPI() async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            'http://kuncoro-api-warehouse.site/api/good-received/get-data-barang'),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final List<dynamic> data =
+            jsonResponse['data']; // ambil dari key 'data'
+
+        setState(() {
+          _listBarang = data;
+        });
+      } else {
+        print('Gagal fetch data: ${response.body}');
+      }
+    } catch (e) {
+      print('Error saat fetch data: $e');
+    }
+  }
+
+  Future<void> _hapusBarang(int id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse(
+            'http://kuncoro-api-warehouse.site/api/good-received/delete/detail/$id'),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Barang berhasil dihapus')),
+        );
+        await _fetchBarangFromAPI(); // refresh data
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menghapus barang')),
+        );
+        print('Response: ${response.body}');
+      }
+    } catch (e) {
+      print('Error saat hapus: $e');
+    }
   }
 
   // Fetch data Material
@@ -498,7 +544,7 @@ class _PageTambahState extends State<PageTambah> {
 
     try {
       final response = await http.get(Uri.parse(
-          'https://kuncoro-api-warehouse.site/api/material/getdata-material')); // <-- ganti dengan URL asli
+          'http://kuncoro-api-warehouse.site/api/material/getdata-material')); // <-- ganti dengan URL asli
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -535,7 +581,7 @@ class _PageTambahState extends State<PageTambah> {
 
     try {
       final response = await http.get(Uri.parse(
-          'https://kuncoro-api-warehouse.site/api/proyek/getdata-proyek')); // <-- ganti dengan URL asli
+          'http://kuncoro-api-warehouse.site/api/proyek/getdata-proyek')); // <-- ganti dengan URL asli
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -574,7 +620,7 @@ class _PageTambahState extends State<PageTambah> {
 
     try {
       final response = await http.get(Uri.parse(
-          'https://kuncoro-api-warehouse.site/api/consumable/getdata-consumable'));
+          'http://kuncoro-api-warehouse.site/api/consumable/getdata-consumable'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -610,7 +656,7 @@ class _PageTambahState extends State<PageTambah> {
 
     try {
       final response = await http.get(Uri.parse(
-          'https://kuncoro-api-warehouse.site/api/tools/getdata-tools'));
+          'http://kuncoro-api-warehouse.site/api/tools/getdata-tools'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -878,15 +924,37 @@ class _PageTambahState extends State<PageTambah> {
                 final item = _listBarang[index];
                 return ListTile(
                   leading: Text('${index + 1}'),
-                  title: Text(item['nama'] ?? ''),
+                  title: Text(item['nama_barang'] ?? '-'),
                   subtitle: Text(
-                      '${item['jenis']} - ${item['quantity']} ${item['qty_jenis']}'),
+                      '${item['jenis_barang']} - ${item['quantity']} ${item['quantity_jenis']} | ${item['keterangan_barang']}'),
                   trailing: IconButton(
                     icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      setState(() {
-                        _listBarang.removeAt(index);
-                      });
+                    onPressed: () async {
+                      final confirm = await showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text('Konfirmasi'),
+                          content: Text('Yakin ingin menghapus barang ini?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text('Batal'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text('Hapus',
+                                  style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        final id = item['id'];
+                        if (id != null) {
+                          await _hapusBarang(id);
+                        }
+                      }
                     },
                   ),
                 );
@@ -1000,7 +1068,7 @@ class _PageTambahState extends State<PageTambah> {
     try {
       final response = await http.post(
         Uri.parse(
-            'https://kuncoro-api-warehouse.site/api/good-received/store/item'),
+            'http://kuncoro-api-warehouse.site/api/good-received/store/item'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(data),
       );
@@ -1008,6 +1076,7 @@ class _PageTambahState extends State<PageTambah> {
       if (response.statusCode == 201 || response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Barang berhasil ditambahkan')));
+        _fetchBarangFromAPI();
       } else {
         print('Gagal: ${response.body}');
         ScaffoldMessenger.of(context)
