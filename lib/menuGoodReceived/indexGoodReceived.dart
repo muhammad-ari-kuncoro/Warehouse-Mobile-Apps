@@ -37,8 +37,9 @@ class _GoodReceivedState extends State<GoodReceived> {
           'http://kuncoro-api-warehouse.site/api/good-received/get-data'));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> decoded = jsonDecode(response.body);
-        final List<dynamic> data = decoded['data'];
+        final jsonResponse = json.decode(response.body);
+        final List<dynamic> data =
+            jsonResponse['data']; // ambil dari key 'data'
 
         setState(() {
           goodReceivedList = data;
@@ -334,55 +335,53 @@ class _GoodReceivedState extends State<GoodReceived> {
                   ),
                   const SizedBox(height: 24),
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
-                      ),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          columns: const [
-                            DataColumn(label: Text('Kode Material')),
-                            DataColumn(label: Text('Nama Material')),
-                            DataColumn(label: Text('Spesifikasi')),
-                            DataColumn(label: Text('Quantity')),
-                            DataColumn(label: Text('Jenis Quantity')),
-                            DataColumn(label: Text('Harga')),
-                            DataColumn(label: Text('Nama Proyek')),
-                          ],
-                          rows: goodReceivedList.map((item) {
-                            return DataRow(cells: [
-                              DataCell(Text('${item['kode_material'] ?? '-'}')),
-                              DataCell(Text('${item['nama_material'] ?? '-'}')),
-                              DataCell(Text(
-                                  '${item['spesifikasi_material'] ?? '-'}')),
-                              DataCell(Text('${item['quantity'] ?? '-'}')),
-                              DataCell(
-                                  Text('${item['jenis_quantity'] ?? '-'}')),
-                              DataCell(
-                                  Text('${item['harga_material'] ?? '-'}')),
-                              DataCell(
-                                Text(
-                                  item['project'] != null
-                                      ? '${item['project']['nama_project'] ?? '-'} | ${item['project']['sub_nama_project'] ?? '-'}'
-                                      : '-',
-                                ),
+                    child: isLoading
+                        ? Center(child: CircularProgressIndicator())
+                        : Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
+                            ),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: DataTable(
+                                columns: const [
+                                  DataColumn(label: Text('Kode Surat Jalan')),
+                                  DataColumn(label: Text('Tanggal Masuk')),
+                                  DataColumn(
+                                      label: Text(
+                                          'No Transaksi / No Surat Jalan')),
+                                  DataColumn(label: Text('Nama Supplier')),
+                                  DataColumn(label: Text('Nama Project')),
+                                  DataColumn(label: Text('No JO Project')),
+                                ],
+                                rows: goodReceivedList.map((item) {
+                                  return DataRow(cells: [
+                                    DataCell(Text('${item['kd_sj'] ?? '-'}')),
+                                    DataCell(Text(
+                                        '${item['tanggal_masuk'] ?? '-'}')),
+                                    DataCell(Text(
+                                        '${item['kode_surat_jalan'] ?? '-'}')),
+                                    DataCell(Text(
+                                        '${item['nama_supplier'] ?? '-'}')),
+                                    DataCell(
+                                        Text('${item['nama_project'] ?? '-'}')),
+                                    DataCell(Text(
+                                        '${item['no_jo_project'] ?? '-'}')),
+                                  ]);
+                                }).toList(),
                               ),
-                            ]);
-                          }).toList(),
-                        ),
-                      ),
-                    ),
-                  ),
+                            ),
+                          ),
+                  )
                 ],
               ),
             ),
@@ -715,9 +714,11 @@ class _PageTambahState extends State<PageTambah> {
             _buildBarangList(),
             SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _tambahBarang,
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+              onPressed: _tambahAlamat,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green, // seperti btn-success
+                foregroundColor: Colors.white, // teks putih
+              ),
               child: Text('Submit'),
             ),
           ],
@@ -888,8 +889,10 @@ class _PageTambahState extends State<PageTambah> {
               children: [
                 ElevatedButton(
                   onPressed: _tambahBarang,
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green, // seperti btn-success
+                    foregroundColor: Colors.white, // teks putih
+                  ),
                   child: Text('Tambah Barang'),
                 ),
                 SizedBox(width: 8),
@@ -897,7 +900,10 @@ class _PageTambahState extends State<PageTambah> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey, // seperti btn-secondary
+                    foregroundColor: Colors.white,
+                  ),
                   child: Text('Go back'),
                 ),
               ],
@@ -1086,6 +1092,60 @@ class _PageTambahState extends State<PageTambah> {
       print('Error: $e');
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Terjadi kesalahan jaringan')));
+    }
+  }
+
+  void _tambahAlamat() async {
+    // Validasi input
+    if (_tanggalMasukController.text.isEmpty ||
+        _noSuratJalanController.text.isEmpty ||
+        _namaSupplierController.text.isEmpty ||
+        _selectedProject == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lengkapi semua field')),
+      );
+      return;
+    }
+
+    // Buat data JSON untuk dikirim
+    final data = {
+      'tanggal_masuk': _tanggalMasukController.text,
+      'kode_surat_jalan': _noSuratJalanController.text,
+      'nama_supplier': _namaSupplierController.text,
+      'project_id': _selectedProject,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://kuncoro-api-warehouse.site/api/good-received/store'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Data Berhasil Disimpan')),
+        );
+        // Kosongkan form jika perlu
+        setState(() {
+          _tanggalMasukController.clear();
+          _noSuratJalanController.clear();
+          _namaSupplierController.clear();
+          _selectedProject = null;
+        });
+
+        Navigator.popUntil(context, (route) => route.isFirst);
+      } else {
+        print('Gagal: ${response.body}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan data alamat')),
+        );
+      }
+    } catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Terjadi kesalahan jaringan')),
+      );
     }
   }
 }
