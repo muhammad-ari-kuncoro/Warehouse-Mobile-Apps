@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:mobile_apps_wh/ConsumableIssuance/CreateDataConsumablesIssuance.dart';
 import 'package:mobile_apps_wh/MaterialIssuance/createMaterialIssuance.dart';
 import 'package:mobile_apps_wh/MaterialIssuance/indexMaterialIssuance.dart';
+import 'package:mobile_apps_wh/ToolsAssets/createCheckoutDataTools.dart';
 import 'package:mobile_apps_wh/homePage.dart';
 import 'package:mobile_apps_wh/main.dart';
 import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
@@ -247,7 +248,9 @@ class SideBar extends StatelessWidget {
               Navigator.pop(context); // Tutup drawer dulu
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const MaterialScreen()),
+                MaterialPageRoute(
+                    builder: (context) =>
+                        const CreatecheckoutdatatoolsScreen()),
               );
             },
           ),
