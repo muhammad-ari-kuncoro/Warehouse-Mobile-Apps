@@ -227,13 +227,7 @@ class _GoodReceivedState extends State<GoodReceived> {
                 );
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.folder_copy_outlined),
-              title: const Text('Delivery Order'),
-              onTap: () {
-                navigateWithSlide(context, const DummyPage(title: 'Laporan'));
-              },
-            ),
+
             // Heading
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
