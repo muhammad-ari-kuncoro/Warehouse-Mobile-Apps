@@ -402,6 +402,7 @@ class _ToolState extends State<ToolsScreen> {
                             DataColumn(label: Text('Tipe Alat')),
                             DataColumn(label: Text('Quantity')),
                             DataColumn(label: Text('Jenis Quantity')),
+                            DataColumn(label: Text('Keterangan')),
                           ],
                           rows: toolsList.map((item) {
                             return DataRow(cells: [
@@ -414,6 +415,39 @@ class _ToolState extends State<ToolsScreen> {
                               DataCell(Text('${item['quantity'] ?? '-'}')),
                               DataCell(
                                   Text('${item['jenis_quantity'] ?? '-'}')),
+                              DataCell(
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PageEdit(
+                                          title: 'Edit Proyek',
+                                          projectList: [],
+                                          alatData: item,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.1),
+                                    foregroundColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text('Edit Data'),
+                                ),
+                              ),
                             ]);
                           }).toList(),
                         ),
@@ -553,6 +587,146 @@ class _PageTambahState extends State<PageTambah> {
             ElevatedButton(
               onPressed: _submitForm,
               child: const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PageEdit extends StatefulWidget {
+  final String title;
+  final List<dynamic> projectList;
+  final Map<String, dynamic> alatData; // Data alat yang akan diedit
+
+  const PageEdit({
+    super.key,
+    required this.projectList,
+    required this.title,
+    required this.alatData,
+  });
+
+  @override
+  State<PageEdit> createState() => _PageEditState();
+}
+
+class _PageEditState extends State<PageEdit> {
+  late TextEditingController _namaAlatController;
+  late TextEditingController _spesifikasiAlatController;
+  late TextEditingController _jenisAlatController;
+  late TextEditingController _tipeAlatController;
+  late TextEditingController _quantityController;
+  late TextEditingController _jenisQuantityController;
+
+  @override
+  void initState() {
+    super.initState();
+    _namaAlatController =
+        TextEditingController(text: widget.alatData['nama_alat']);
+    _spesifikasiAlatController =
+        TextEditingController(text: widget.alatData['spesifikasi_alat']);
+    _jenisAlatController =
+        TextEditingController(text: widget.alatData['jenis_alat']);
+    _tipeAlatController =
+        TextEditingController(text: widget.alatData['tipe_alat']);
+    _quantityController =
+        TextEditingController(text: widget.alatData['quantity'].toString());
+    _jenisQuantityController =
+        TextEditingController(text: widget.alatData['jenis_quantity']);
+  }
+
+  Future<void> _submitForm() async {
+    if (_namaAlatController.text.isEmpty ||
+        _spesifikasiAlatController.text.isEmpty ||
+        _jenisAlatController.text.isEmpty ||
+        _tipeAlatController.text.isEmpty ||
+        _quantityController.text.isEmpty ||
+        _jenisQuantityController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lengkapi semua data terlebih dahulu')),
+      );
+      return;
+    }
+
+    final uri = Uri.parse(
+        'https://kuncoro-api-warehouse.site/api/tools/update-api-tools/${widget.alatData['id']}');
+
+    final response = await http.put(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nama_alat': _namaAlatController.text,
+        'spesifikasi_alat': _spesifikasiAlatController.text,
+        'jenis_alat': _jenisAlatController.text,
+        'tipe_alat': _tipeAlatController.text,
+        'quantity': int.tryParse(_quantityController.text.trim()) ?? 0,
+        'jenis_quantity': _jenisQuantityController.text,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data berhasil diperbarui')),
+      );
+      Navigator.pop(context);
+    } else {
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal memperbarui data')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _namaAlatController.dispose();
+    _spesifikasiAlatController.dispose();
+    _jenisAlatController.dispose();
+    _tipeAlatController.dispose();
+    _quantityController.dispose();
+    _jenisQuantityController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ListView(
+          children: [
+            TextFormField(
+              controller: _namaAlatController,
+              decoration: const InputDecoration(labelText: 'Nama Alat'),
+            ),
+            TextFormField(
+              controller: _spesifikasiAlatController,
+              decoration: const InputDecoration(labelText: 'Spesifikasi'),
+            ),
+            TextFormField(
+              controller: _jenisAlatController,
+              decoration: const InputDecoration(labelText: 'Jenis Alat'),
+            ),
+            TextFormField(
+              controller: _tipeAlatController,
+              decoration: const InputDecoration(labelText: 'Tipe Alat'),
+            ),
+            TextFormField(
+              controller: _quantityController,
+              decoration: const InputDecoration(labelText: 'Quantity'),
+              keyboardType: TextInputType.number,
+            ),
+            TextFormField(
+              controller: _jenisQuantityController,
+              decoration: const InputDecoration(labelText: 'Jenis Quantity'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _submitForm,
+              child: const Text('Update'),
             ),
           ],
         ),

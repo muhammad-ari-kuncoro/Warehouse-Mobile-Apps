@@ -214,7 +214,13 @@ class _ConsumableState extends State<ConsumableScreen> {
                 );
               },
             ),
-
+            ListTile(
+              leading: const Icon(Icons.folder_copy_outlined),
+              title: const Text('Delivery Order'),
+              onTap: () {
+                navigateWithSlide(context, const DummyPage(title: 'Laporan'));
+              },
+            ),
             // Heading
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
@@ -423,6 +429,7 @@ class _ConsumableState extends State<ConsumableScreen> {
                             DataColumn(label: Text('Jenis Quantity')),
                             DataColumn(label: Text('Harga')),
                             DataColumn(label: Text('Nama Proyek')),
+                            DataColumn(label: Text('Keterangan')),
                           ],
                           rows: consumableList.map((item) {
                             return DataRow(cells: [
@@ -442,6 +449,40 @@ class _ConsumableState extends State<ConsumableScreen> {
                                   item['project'] != null
                                       ? '${item['project']['nama_project'] ?? '-'} | ${item['project']['sub_nama_project'] ?? '-'}'
                                       : '-',
+                                ),
+                              ),
+                              DataCell(
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            PageEditConsumable(
+                                          title: 'Edit Proyek',
+                                          consumable: item, // ← hanya 1 item
+                                          projectList: _projectList,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.1),
+                                    foregroundColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: const Text('Edit'),
                                 ),
                               ),
                             ]);
@@ -589,6 +630,156 @@ class _PageTambahState extends State<PageTambah> {
             ElevatedButton(
               onPressed: _submitForm,
               child: const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PageEditConsumable extends StatefulWidget {
+  final String title;
+  final List<dynamic> projectList;
+  final Map<String, dynamic> consumable;
+
+  const PageEditConsumable({
+    super.key,
+    required this.title,
+    required this.projectList,
+    required this.consumable,
+  });
+
+  @override
+  State<PageEditConsumable> createState() => _PageEditConsumableState();
+}
+
+class _PageEditConsumableState extends State<PageEditConsumable> {
+  late TextEditingController _namaConsumableController;
+  late TextEditingController _spesifikasiConsumableController;
+  late TextEditingController _quantityController;
+  late TextEditingController _jenisQuantityController;
+  late TextEditingController _hargaConsumableController;
+  late TextEditingController _jenisConsumableController;
+
+  int? _selectedProjectId;
+
+  @override
+  void initState() {
+    super.initState();
+    _namaConsumableController =
+        TextEditingController(text: widget.consumable['nama_consumable']);
+    _spesifikasiConsumableController = TextEditingController(
+        text: widget.consumable['spesifikasi_consumable']);
+    _quantityController =
+        TextEditingController(text: widget.consumable['quantity'].toString());
+    _jenisQuantityController =
+        TextEditingController(text: widget.consumable['jenis_quantity']);
+    _hargaConsumableController = TextEditingController(
+        text: widget.consumable['harga_consumable'].toString());
+    _jenisConsumableController =
+        TextEditingController(text: widget.consumable['jenis_consumable']);
+
+    _selectedProjectId = widget.consumable['project_id'];
+  }
+
+  Future<void> _submitEdit() async {
+    if (_namaConsumableController.text.isEmpty ||
+        _quantityController.text.isEmpty ||
+        _jenisQuantityController.text.isEmpty ||
+        _hargaConsumableController.text.isEmpty ||
+        _jenisConsumableController.text.isEmpty ||
+        _selectedProjectId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lengkapi semua data terlebih dahulu')),
+      );
+      return;
+    }
+
+    final uri = Uri.parse(
+        'https://kuncoro-api-warehouse.site/api/consumable/update-api-consumable/${widget.consumable['id']}');
+
+    final response = await http.put(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nama_consumable': _namaConsumableController.text,
+        'spesifikasi_consumable': _spesifikasiConsumableController.text,
+        'quantity': int.tryParse(_quantityController.text) ?? 0,
+        'jenis_quantity': _jenisQuantityController.text,
+        'jenis_consumable': _jenisConsumableController.text,
+        'harga_consumable': _hargaConsumableController.text,
+        'project_id': _selectedProjectId,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data berhasil diperbarui')),
+      );
+      Navigator.pop(context, true);
+    } else {
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal memperbarui data')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ListView(
+          children: [
+            TextFormField(
+              controller: _namaConsumableController,
+              decoration: const InputDecoration(labelText: 'Nama Consumable'),
+            ),
+            TextFormField(
+              controller: _spesifikasiConsumableController,
+              decoration: const InputDecoration(labelText: 'Spesifikasi'),
+            ),
+            TextFormField(
+              controller: _quantityController,
+              decoration: const InputDecoration(labelText: 'Quantity'),
+              keyboardType: TextInputType.number,
+            ),
+            TextFormField(
+              controller: _jenisConsumableController,
+              decoration: const InputDecoration(labelText: 'Jenis Consumable'),
+            ),
+            TextFormField(
+              controller: _jenisQuantityController,
+              decoration: const InputDecoration(labelText: 'Jenis Quantity'),
+            ),
+            TextFormField(
+              controller: _hargaConsumableController,
+              decoration: const InputDecoration(labelText: 'Harga'),
+              keyboardType: TextInputType.number,
+            ),
+            DropdownButtonFormField<int>(
+              value: _selectedProjectId,
+              hint: const Text('Pilih Proyek'),
+              items: widget.projectList.map<DropdownMenuItem<int>>((project) {
+                return DropdownMenuItem<int>(
+                  value: project['id'],
+                  child: Text('${project['nama_project']}'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedProjectId = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _submitEdit,
+              child: const Text('Perbarui'),
             ),
           ],
         ),
