@@ -2,13 +2,18 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_apps_wh/ConsumableIssuance/indexDataConsumableIssuance.dart';
+import 'package:mobile_apps_wh/MaterialIssuance/indexMaterialIssuance.dart';
 import 'package:mobile_apps_wh/Services/theme_services.dart';
 import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
+import 'package:mobile_apps_wh/homePage.dart';
 import 'package:mobile_apps_wh/main.dart';
 import 'package:mobile_apps_wh/menuConsumable/consumableIndex.dart';
+import 'package:mobile_apps_wh/menuGoodReceived/indexGoodReceived.dart';
 import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
 import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile_apps_wh/menuTools/indexTools.dart';
 
 class ProjectScreen extends StatefulWidget {
   const ProjectScreen({super.key});
@@ -75,58 +80,64 @@ class _ProjectScreenState extends State<ProjectScreen> {
                 child: Center(
                   child: Text(
                     'Menu Utama',
-                    style: TextStyle(color: Colors.grey[200], fontSize: 18),
+                    style: TextStyle(color: Colors.grey, fontSize: 18),
                   ),
                 ),
               ),
             ),
+
             ListTile(
               leading: const Icon(Icons.dashboard),
               title: const Text('Dashboard'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Tutup drawer dulu
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => const DashboardScreen()),
+                  MaterialPageRoute(builder: (context) => DashboardScreen()),
                 );
               },
             ),
             const Divider(),
+            // Heading
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
               child: Text(
                 '— Industri',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.folder),
               title: const Text('Proyek'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Tutup drawer dulu
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => const ProjectScreen()),
+                  MaterialPageRoute(builder: (context) => ProjectScreen()),
                 );
               },
             ),
             const Divider(),
+            // Heading
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
               child: Text(
                 '— Stok',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
               ),
             ),
+
             ListTile(
               leading: const Icon(Icons.insert_chart),
               title: const Text('Data Material'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Tutup drawer dulu
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -134,47 +145,104 @@ class _ProjectScreenState extends State<ProjectScreen> {
                 );
               },
             ),
+
+            ListTile(
+              leading: const Icon(Icons.insert_chart_outlined),
+              title: const Text('Data Alat'),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer dulu
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ToolsScreen()),
+                );
+              },
+            ),
+
             ListTile(
               leading: const Icon(Icons.insert_chart_rounded),
               title: const Text('Data Consumable'),
               onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ConsumableScreen()),
-                );
+                navigateWithSlide(context, const DummyPage(title: 'Laporan'));
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.build),
-              title: const Text('Data Alat'),
-              onTap: () {},
-            ),
+
             const Divider(),
+            // Heading
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
               child: Text(
                 '— Dokumen',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.folder_copy_sharp),
               title: const Text('Good Received'),
-              onTap: () {},
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer dulu
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const GoodReceived()),
+                );
+              },
             ),
             ListTile(
               leading: const Icon(Icons.folder_copy_outlined),
               title: const Text('Delivery Order'),
-              onTap: () {},
+              onTap: () {
+                navigateWithSlide(context, const DummyPage(title: 'Laporan'));
+              },
             ),
+            // Heading
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+              child: Text(
+                '— Dokumen Produksi',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.inventory_2),
+              title: const Text('Pemakaian Consumable'),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer dulu
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const IndexdataconsumableissuanceScreen()),
+                );
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.inventory),
+              title: const Text('Pemakaian Material'),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer dulu
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const Indexdatamaterialissuance()),
+                );
+              },
+            ),
+
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
-              onTap: () {},
+              onTap: () {
+                // Panggil fungsi logout disini
+                _logout(context);
+              },
             ),
           ],
         ),
@@ -333,6 +401,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
                       DataColumn(label: Text('No JO ( Job Order)')),
                       DataColumn(label: Text('Kode Proyek')),
                       DataColumn(label: Text('No PO (Purchase Order)')),
+                      DataColumn(label: Text('Keterangan')),
                     ],
                     rows: projectList.map((project) {
                       return DataRow(cells: [
@@ -342,6 +411,37 @@ class _ProjectScreenState extends State<ProjectScreen> {
                         DataCell(Text(project['no_jo_project'] ?? '-')),
                         DataCell(Text(project['kode_project'] ?? '-')),
                         DataCell(Text(project['no_po_project'] ?? '-')),
+                        DataCell(
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PageEdit(
+                                    title: 'Edit Proyek',
+                                    project: project,
+                                  ),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.1),
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text('Keterangan'),
+                          ),
+                        ),
                       ]);
                     }).toList(),
                   ),
@@ -353,6 +453,17 @@ class _ProjectScreenState extends State<ProjectScreen> {
       ),
     );
   }
+}
+
+Future<void> _logout(BuildContext context) async {
+  // Logout logic disini
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('Logged out!')),
+  );
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => LoginScreen()),
+  );
 }
 
 class PageTambah extends StatelessWidget {
@@ -542,6 +653,197 @@ class PageTambah extends StatelessWidget {
                     value: item,
                     child: Text(item),
                   ))
+              .toList(),
+          onChanged: (value) {
+            if (value != null) controller.text = value;
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class PageEdit extends StatefulWidget {
+  final String title;
+  final Map<String, dynamic> project;
+
+  const PageEdit({super.key, required this.title, required this.project});
+
+  @override
+  State<PageEdit> createState() => _PageEditState();
+}
+
+class _PageEditState extends State<PageEdit> {
+  late TextEditingController _namaProyekController;
+  late TextEditingController _subNamaProyekController;
+  late TextEditingController _noJOProyekController;
+  late TextEditingController _noPOController;
+  late TextEditingController _kategoriProyekController;
+
+  @override
+  void initState() {
+    super.initState();
+    _namaProyekController =
+        TextEditingController(text: widget.project['nama_project']);
+    _subNamaProyekController =
+        TextEditingController(text: widget.project['sub_nama_project']);
+    _noJOProyekController =
+        TextEditingController(text: widget.project['no_jo_project']);
+    _noPOController =
+        TextEditingController(text: widget.project['no_po_project']);
+    _kategoriProyekController =
+        TextEditingController(text: widget.project['kategori_project']);
+  }
+
+  Future<void> _submitForm() async {
+    final uri = Uri.parse(
+        'https://kuncoro-api-warehouse.site/api/proyek/update-project/${widget.project['id']}');
+
+    final response = await http.put(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nama_project': _namaProyekController.text,
+        'sub_nama_project': _subNamaProyekController.text,
+        'kategori_project': _kategoriProyekController.text,
+        'no_jo_project': _noJOProyekController.text,
+        'no_po_project': _noPOController.text,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data berhasil diperbarui')),
+      );
+      Navigator.pop(context);
+    } else {
+      print('Gagal update: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal memperbarui data')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            _buildFormCard(
+              children: [
+                _buildTextField(
+                    label: 'Nama Proyek',
+                    hint: 'Isi nama proyek',
+                    controller: _namaProyekController),
+                _buildTextField(
+                    label: 'Nama Client Proyek',
+                    hint: 'Isi nama client proyek',
+                    controller: _subNamaProyekController),
+                _buildTextField(
+                    label: 'No JO',
+                    hint: 'Isi nomor JO',
+                    controller: _noJOProyekController),
+                _buildDropdownFieldDropdown(
+                  label: 'Kategori Proyek',
+                  items: ['General Industri', 'Oil dan Migas', 'Panas Bumi'],
+                  controller: _kategoriProyekController,
+                ),
+                _buildTextField(
+                    label: 'No PO',
+                    hint: 'Isi nomor PO',
+                    controller: _noPOController),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Close")),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                    onPressed: _submitForm, child: const Text("Update")),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormCard({required List<Widget> children}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: children
+            .map((child) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: child,
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownFieldDropdown({
+    required String label,
+    required List<String> items,
+    required TextEditingController controller,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          value: controller.text.isEmpty ? null : controller.text,
+          decoration: InputDecoration(
+            hintText: 'Pilih $label',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          ),
+          items: items
+              .map((item) => DropdownMenuItem(value: item, child: Text(item)))
               .toList(),
           onChanged: (value) {
             if (value != null) controller.text = value;

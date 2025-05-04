@@ -4,6 +4,7 @@ import 'package:mobile_apps_wh/ConsumableIssuance/indexDataConsumableIssuance.da
 import 'package:mobile_apps_wh/MaterialIssuance/indexMaterialIssuance.dart';
 import 'package:mobile_apps_wh/homePage.dart';
 import 'package:mobile_apps_wh/main.dart';
+import 'package:mobile_apps_wh/menuConsumable/consumableIndex.dart';
 import 'package:mobile_apps_wh/menuGoodReceived/indexGoodReceived.dart';
 import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
 import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
@@ -189,7 +190,11 @@ class SideBar extends StatelessWidget {
             leading: const Icon(Icons.dashboard),
             title: const Text('Dashboard'),
             onTap: () {
-              Navigator.of(context).pop();
+              Navigator.pop(context); // Tutup drawer dulu
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DashboardScreen()),
+              );
             },
           ),
           const Divider(),
@@ -241,7 +246,7 @@ class SideBar extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(Icons.insert_chart),
+            leading: const Icon(Icons.insert_chart_outlined),
             title: const Text('Data Alat'),
             onTap: () {
               Navigator.pop(context); // Tutup drawer dulu
@@ -256,7 +261,12 @@ class SideBar extends StatelessWidget {
             leading: const Icon(Icons.insert_chart_rounded),
             title: const Text('Data Consumable'),
             onTap: () {
-              navigateWithSlide(context, const DummyPage(title: 'Laporan'));
+              Navigator.pop(context); // Tutup drawer dulu
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ConsumableScreen()),
+              );
             },
           ),
 
@@ -283,13 +293,7 @@ class SideBar extends StatelessWidget {
               );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.folder_copy_outlined),
-            title: const Text('Delivery Order'),
-            onTap: () {
-              navigateWithSlide(context, const DummyPage(title: 'Laporan'));
-            },
-          ),
+
           // Heading
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),

@@ -2,13 +2,18 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_apps_wh/ConsumableIssuance/indexDataConsumableIssuance.dart';
+import 'package:mobile_apps_wh/MaterialIssuance/indexMaterialIssuance.dart';
 import 'package:mobile_apps_wh/Services/theme_services.dart';
 import 'package:mobile_apps_wh/dashboard/indexDashboard.dart';
+import 'package:mobile_apps_wh/homePage.dart';
 import 'package:mobile_apps_wh/main.dart';
 import 'package:mobile_apps_wh/menuConsumable/consumableIndex.dart';
+import 'package:mobile_apps_wh/menuGoodReceived/indexGoodReceived.dart';
 import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
 import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile_apps_wh/menuTools/indexTools.dart';
 
 class MaterialScreen extends StatefulWidget {
   const MaterialScreen({super.key});
@@ -90,64 +95,70 @@ class _MaterialScreenState extends State<MaterialScreen> {
             SizedBox(
               height: 80,
               child: DrawerHeader(
-                decoration: const BoxDecoration(color: Colors.blueGrey),
+                decoration: BoxDecoration(color: Colors.blueGrey),
                 margin: EdgeInsets.zero,
                 padding: EdgeInsets.zero,
                 child: Center(
                   child: Text(
                     'Menu Utama',
-                    style: TextStyle(color: Colors.grey[200], fontSize: 18),
+                    style: TextStyle(color: Colors.grey, fontSize: 18),
                   ),
                 ),
               ),
             ),
+
             ListTile(
               leading: const Icon(Icons.dashboard),
               title: const Text('Dashboard'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Tutup drawer dulu
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => const DashboardScreen()),
+                  MaterialPageRoute(builder: (context) => DashboardScreen()),
                 );
               },
             ),
             const Divider(),
+            // Heading
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
               child: Text(
                 '— Industri',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.folder),
-              title: const Text('Data Proyek'),
+              title: const Text('Proyek'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Tutup drawer dulu
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => const ProjectScreen()),
+                  MaterialPageRoute(builder: (context) => ProjectScreen()),
                 );
               },
             ),
             const Divider(),
+            // Heading
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
               child: Text(
                 '— Stok',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
               ),
             ),
+
             ListTile(
               leading: const Icon(Icons.insert_chart),
               title: const Text('Data Material'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Tutup drawer dulu
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -155,11 +166,24 @@ class _MaterialScreenState extends State<MaterialScreen> {
                 );
               },
             ),
+
             ListTile(
-              leading: const Icon(Icons.insert_chart),
+              leading: const Icon(Icons.insert_chart_outlined),
+              title: const Text('Data Alat'),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer dulu
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ToolsScreen()),
+                );
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.insert_chart_rounded),
               title: const Text('Data Consumable'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Tutup drawer dulu
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -167,35 +191,78 @@ class _MaterialScreenState extends State<MaterialScreen> {
                 );
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.build),
-              title: const Text('Data Alat'),
-              onTap: () {},
-            ),
+
             const Divider(),
+            // Heading
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
               child: Text(
                 '— Dokumen',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.folder_copy_sharp),
               title: const Text('Good Received'),
-              onTap: () {},
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer dulu
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const GoodReceived()),
+                );
+              },
             ),
+
+            // Heading
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+              child: Text(
+                '— Dokumen Produksi',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+
             ListTile(
-              leading: const Icon(Icons.folder_copy_outlined),
-              title: const Text('Delivery Order'),
-              onTap: () {},
+              leading: const Icon(Icons.inventory_2),
+              title: const Text('Pemakaian Consumable'),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer dulu
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const IndexdataconsumableissuanceScreen()),
+                );
+              },
             ),
+
+            ListTile(
+              leading: const Icon(Icons.inventory),
+              title: const Text('Pemakaian Material'),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer dulu
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const Indexdatamaterialissuance()),
+                );
+              },
+            ),
+
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
-              onTap: () {},
+              onTap: () {
+                // Panggil fungsi logout disini
+                _logout(context);
+              },
             ),
           ],
         ),
@@ -357,6 +424,7 @@ class _MaterialScreenState extends State<MaterialScreen> {
                             DataColumn(label: Text('Jenis Quantity')),
                             DataColumn(label: Text('Harga')),
                             DataColumn(label: Text('Nama Proyek')),
+                            DataColumn(label: Text('Keterangan')),
                           ],
                           rows: materialList.map((item) {
                             return DataRow(cells: [
@@ -376,6 +444,39 @@ class _MaterialScreenState extends State<MaterialScreen> {
                                       : '-',
                                 ),
                               ),
+                              DataCell(
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PageEdit(
+                                          title: 'Edit Proyek',
+                                          material: item, // ← hanya 1 item
+                                          projectList: _projectList,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.1),
+                                    foregroundColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: const Text('Edit'),
+                                ),
+                              ),
                             ]);
                           }).toList(),
                         ),
@@ -387,6 +488,17 @@ class _MaterialScreenState extends State<MaterialScreen> {
             ),
     );
   }
+}
+
+Future<void> _logout(BuildContext context) async {
+  // Logout logic disini
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('Logged out!')),
+  );
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => LoginScreen()),
+  );
 }
 
 class PageTambah extends StatefulWidget {
@@ -509,6 +621,145 @@ class _PageTambahState extends State<PageTambah> {
             ElevatedButton(
               onPressed: _submitForm,
               child: const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PageEdit extends StatefulWidget {
+  final String title;
+  final Map<String, dynamic> material;
+  final List<dynamic> projectList;
+
+  const PageEdit({
+    super.key,
+    required this.title,
+    required this.material,
+    required this.projectList,
+  });
+
+  @override
+  State<PageEdit> createState() => _PageEditState();
+}
+
+class _PageEditState extends State<PageEdit> {
+  late TextEditingController _namaMaterialController;
+  late TextEditingController _spesifikasiMaterialController;
+  late TextEditingController _quantityController;
+  late TextEditingController _jenisQuantityController;
+  late TextEditingController _hargaMaterialController;
+  late TextEditingController _jenisMaterialController;
+
+  int? _selectedProjectId;
+
+  @override
+  void initState() {
+    super.initState();
+    final m = widget.material;
+    _namaMaterialController =
+        TextEditingController(text: m['nama_material'] ?? '');
+    _spesifikasiMaterialController =
+        TextEditingController(text: m['spesifikasi_material'] ?? '');
+    _quantityController =
+        TextEditingController(text: m['quantity']?.toString() ?? '');
+    _jenisQuantityController =
+        TextEditingController(text: m['jenis_quantity'] ?? '');
+    _jenisMaterialController =
+        TextEditingController(text: m['jenis_material'] ?? '');
+    _hargaMaterialController =
+        TextEditingController(text: m['harga_material'] ?? '');
+    _selectedProjectId = m['project_id'];
+  }
+
+  Future<void> _updateForm() async {
+    final id = widget.material['id'];
+    if (id == null) return;
+
+    final uri = Uri.parse(
+        'https://kuncoro-api-warehouse.site/api/material/update-api-material/${widget.material['id']}');
+
+    final response = await http.put(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nama_material': _namaMaterialController.text,
+        'spesifikasi_material': _spesifikasiMaterialController.text,
+        'quantity': int.tryParse(_quantityController.text) ?? 0,
+        'jenis_quantity': _jenisQuantityController.text,
+        'jenis_material': _jenisMaterialController.text,
+        'harga_material': _hargaMaterialController.text,
+        'project_id': _selectedProjectId,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data berhasil diperbarui')),
+      );
+      Navigator.pop(context);
+    } else {
+      print('Gagal update: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal memperbarui data')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ListView(
+          children: [
+            TextFormField(
+              controller: _namaMaterialController,
+              decoration: const InputDecoration(labelText: 'Nama Material'),
+            ),
+            TextFormField(
+              controller: _spesifikasiMaterialController,
+              decoration: const InputDecoration(labelText: 'Spesifikasi'),
+            ),
+            TextFormField(
+              controller: _quantityController,
+              decoration: const InputDecoration(labelText: 'Quantity'),
+              keyboardType: TextInputType.number,
+            ),
+            TextFormField(
+              controller: _jenisMaterialController,
+              decoration: const InputDecoration(labelText: 'Jenis Material'),
+            ),
+            TextFormField(
+              controller: _jenisQuantityController,
+              decoration: const InputDecoration(labelText: 'Jenis Quantity'),
+            ),
+            TextFormField(
+              controller: _hargaMaterialController,
+              decoration: const InputDecoration(labelText: 'Harga'),
+            ),
+            DropdownButtonFormField<int>(
+              value: _selectedProjectId,
+              hint: const Text('Pilih Proyek'),
+              items: widget.projectList.map<DropdownMenuItem<int>>((project) {
+                return DropdownMenuItem<int>(
+                  value: project['id'],
+                  child: Text('${project['nama_project']}'),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedProjectId = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _updateForm,
+              child: const Text('Perbarui'),
             ),
           ],
         ),
