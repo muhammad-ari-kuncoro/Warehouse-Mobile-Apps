@@ -4,6 +4,7 @@ import 'package:mobile_apps_wh/ConsumableIssuance/CreateDataConsumablesIssuance.
 import 'package:mobile_apps_wh/MaterialIssuance/createMaterialIssuance.dart';
 import 'package:mobile_apps_wh/MaterialIssuance/indexMaterialIssuance.dart';
 import 'package:mobile_apps_wh/ToolsAssets/createCheckoutDataTools.dart';
+import 'package:mobile_apps_wh/ToolsAssets/indexCheckinDataTools.dart';
 import 'package:mobile_apps_wh/homePage.dart';
 import 'package:mobile_apps_wh/main.dart';
 import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
@@ -259,7 +260,12 @@ class SideBar extends StatelessWidget {
             leading: const Icon(Icons.build),
             title: const Text('Data Tools In'),
             onTap: () {
-              navigateWithSlide(context, const DummyPage(title: 'Laporan'));
+              Navigator.pop(context); // Tutup drawer dulu
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const Indexcheckindatatools()),
+              );
             },
           ),
           // Heading
