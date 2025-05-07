@@ -14,6 +14,7 @@ import 'package:mobile_apps_wh/menuMaterial/materialIndex.dart';
 import 'package:mobile_apps_wh/menuProyek/indexProyek.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_apps_wh/menuTools/indexTools.dart';
+import 'package:mobile_apps_wh/menuGoodReceived/detailGoodReceived.dart';
 
 class GoodReceived extends StatefulWidget {
   const GoodReceived({super.key});
@@ -439,6 +440,7 @@ class _GoodReceivedState extends State<GoodReceived> {
                                   DataColumn(label: Text('Nama Supplier')),
                                   DataColumn(label: Text('Nama Project')),
                                   DataColumn(label: Text('No JO Project')),
+                                  DataColumn(label: Text('Aksi')),
                                 ],
                                 rows: goodReceivedList.map((item) {
                                   return DataRow(cells: [
@@ -453,6 +455,22 @@ class _GoodReceivedState extends State<GoodReceived> {
                                         Text('${item['nama_project'] ?? '-'}')),
                                     DataCell(Text(
                                         '${item['no_jo_project'] ?? '-'}')),
+                                    DataCell(
+                                      IconButton(
+                                        icon: Icon(Icons.arrow_forward),
+                                        tooltip: 'Lihat Detail',
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  DetailGoodReceived(
+                                                      id: item['id']),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
                                   ]);
                                 }).toList(),
                               ),
