@@ -147,7 +147,6 @@ class _DetailGoodReceivedState extends State<DetailGoodReceived> {
           DataColumn(label: Text('Jenis Barang')),
           DataColumn(label: Text('Jumlah')),
           DataColumn(label: Text('Satuan')),
-          DataColumn(label: Text('Keterangan')),
         ],
         rows: barangList.map<DataRow>((item) {
           return DataRow(cells: [
@@ -155,7 +154,6 @@ class _DetailGoodReceivedState extends State<DetailGoodReceived> {
             DataCell(Text(item['jenis_barang'] ?? '-')),
             DataCell(Text(item['quantity'].toString())),
             DataCell(Text(item['quantity_jenis'] ?? '-')),
-            DataCell(Text(item['keterangan_barang'] ?? '-')),
           ]);
         }).toList(),
       ),

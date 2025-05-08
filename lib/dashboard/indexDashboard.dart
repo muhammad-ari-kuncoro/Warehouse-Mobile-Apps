@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_apps_wh/ConsumableIssuance/indexDataConsumableIssuance.dart';
@@ -13,11 +15,50 @@ import 'package:mobile_apps_wh/services/theme_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int jumlahBarangMasuk = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    getJumlahBarangPerBulan();
+  }
+
+  // Fungsi untuk mengambil data jumlah barang masuk
+  Future<void> getJumlahBarangPerBulan() async {
+    final now = DateTime.now();
+    final year = now.year;
+    final month = now.month;
+
+    final url = Uri.parse('http://<your-api-url>/jumlah-barang/$year/$month');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        setState(() {
+          jumlahBarangMasuk = data['total']; // simpan ke state
+        });
+      } else {
+        print('Failed to load data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    int jumlahBarangMasuk = 0;
     final now = DateTime.now();
     final formattedDate = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(now);
 
@@ -93,32 +134,20 @@ class DashboardScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
                         Align(
-                          alignment: Alignment.topLeft,
+                          alignment: Alignment.topCenter,
                           child: Wrap(
                             spacing: 16,
                             runSpacing: 16,
                             children: [
-                              _DashboardCard(
-                                icon: Icons.home,
-                                label: 'Home',
-                                onPressed: () {},
-                                width: isLargeScreen
-                                    ? 200
-                                    : constraints.maxWidth * 0.45,
-                              ),
-                              _DashboardCard(
-                                icon: Icons.book,
-                                label: 'User Profile',
-                                onPressed: () {
-                                  navigateWithSlide(
-                                    context,
-                                    const DummyPage(title: 'Data'),
-                                  );
-                                },
-                                width: isLargeScreen
-                                    ? 200
-                                    : constraints.maxWidth * 0.45,
-                              ),
+                              // _DashboardCard(
+                              //   icon: Icons.home,
+                              //   value: int,
+                              //   label: 'Home',
+                              //   onPressed: () {},
+                              //   width: isLargeScreen
+                              //       ? 200
+                              //       : constraints.maxWidth * 0.45,
+                              // ),
                             ],
                           ),
                         ),
@@ -132,18 +161,8 @@ class DashboardScreen extends StatelessWidget {
                                   ? constraints.maxWidth * 0.45
                                   : double.infinity,
                               child: _StatBox(
-                                title: 'Statistik Pengiriman Produk',
-                                value: 10,
-                                icon: Icons.car_crash,
-                              ),
-                            ),
-                            SizedBox(
-                              width: isLargeScreen
-                                  ? constraints.maxWidth * 0.45
-                                  : double.infinity,
-                              child: _StatBox(
                                 title: 'Statistik Barang Masuk',
-                                value: 10,
+                                value: "$jumlahBarangMasuk", // nilai dari API
                                 icon: Icons.call_received_outlined,
                               ),
                             ),
@@ -364,13 +383,14 @@ class _DashboardCard extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
   final double width;
+  final String value;
 
-  const _DashboardCard({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-    required this.width,
-  });
+  const _DashboardCard(
+      {required this.icon,
+      required this.label,
+      required this.onPressed,
+      required this.width,
+      required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -420,7 +440,7 @@ class _DashboardCard extends StatelessWidget {
 
 class _StatBox extends StatelessWidget {
   final String title;
-  final int value;
+  final String value;
   final IconData icon;
   final Color iconColor;
 

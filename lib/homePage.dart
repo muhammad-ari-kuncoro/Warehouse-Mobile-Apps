@@ -61,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Terjadi kesalahan: $e')),
+        SnackBar(content: Text('Password Ssalah')),
       );
     } finally {
       setState(() => _isLoading = false);
