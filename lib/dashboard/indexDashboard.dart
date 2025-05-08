@@ -37,7 +37,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final year = now.year;
     final month = now.month;
 
-    final url = Uri.parse('http://<your-api-url>/jumlah-barang/$year/$month');
+    final url = Uri.parse(
+        'https://kuncoro-api-warehouse.site/api/good-received/jumlah-barang/$year/$month');
 
     try {
       final response = await http.get(url);
@@ -58,7 +59,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int jumlahBarangMasuk = 0;
     final now = DateTime.now();
     final formattedDate = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(now);
 
